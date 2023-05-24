@@ -114,7 +114,7 @@ Route::middleware('auth:sanctum')->group(function() {
         ->prefix('/colas-procesos')->group(function () {
         Route::get('/get/en-proceso', 'getEnProceso');
         Route::get('/get/pendientes/{fecha}', 'getPendientes');
-        Route::get('/get/errores', 'getErrores');
+        Route::get('/get/errores/{fecha}', 'getErrores');
     });
 
 });
