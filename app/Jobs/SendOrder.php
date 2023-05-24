@@ -72,7 +72,19 @@ class SendOrder implements ShouldQueue
                                     "ubicacion" => $pedido->ubicacion_id,
                                     "es_lote" => $producto_catalogo->es_lote,
                                     "items_lotes" => $array_lotes,
+                                    "es_promocion" => 0
                                 );
+
+                                if(!empty($producto->promocion_netsuite_id) && $producto->porcentaje_descuento > 0) {
+                                    $items[] = array(
+                                        "id" => 304545,
+                                        "cantidad" => 1,
+                                        "precio" => "-".$producto->porcentaje_descuento."%",
+                                        "ubicacion" => $pedido->ubicacion_id,
+                                        "es_lote" => 0,
+                                        "es_promocion" => 1
+                                    );
+                                }
                             }
 
                             //productos regalo
@@ -85,6 +97,7 @@ class SendOrder implements ShouldQueue
                                     "ubicacion" => $pedido->ubicacion_id,
                                     "es_lote" => $producto_catalogo->es_lote,
                                     "items_lotes" => $array_lotes,
+                                    "es_promocion" => 0
                                 );
                             }
 
@@ -104,10 +117,18 @@ class SendOrder implements ShouldQueue
                         "ubicacion" => $pedido->ubicacion_id,
                         "es_lote" => $producto->es_lote,
                         "items_lotes" => $array_lotes,
+                        "es_promocion" => 0
                     );
 
-                    if(!empty($producto->promocion_netsuite_id)) {
-                        array_push($promociones_ids, $producto->promocion_netsuite_id);
+                    if(!empty($producto->promocion_netsuite_id) && $producto->porcentaje_descuento > 0) {
+                        $items[] = array(
+                            "id" => 304545,
+                            "cantidad" => 1,
+                            "precio" => "-".$producto->porcentaje_descuento."%",
+                            "ubicacion" => $pedido->ubicacion_id,
+                            "es_lote" => 0,
+                            "es_promocion" => 1
+                        );
                     }
 
                 }
@@ -116,15 +137,15 @@ class SendOrder implements ShouldQueue
         }
 
         //validar para agregar suite promotion
-        $promociones = array();
-        $prom = array_unique($promociones_ids);
-        if(count($prom) > 0) {
-            foreach ($prom as $key => $promo) {
-                $promociones[] = array(
-                    "id" => $promo
-                );
-            }
-        }
+        // $promociones = array();
+        // $prom = array_unique($promociones_ids);
+        // if(count($prom) > 0) {
+        //     foreach ($prom as $key => $promo) {
+        //         $promociones[] = array(
+        //             "id" => $promo
+        //         );
+        //     }
+        // }
 
         //agregando el header de informacion
         $array_json = array(
@@ -143,7 +164,7 @@ class SendOrder implements ShouldQueue
             "transportadora" => $pedido->transportadora_id,
             "medico_id" => $pedido->medico_id,
             "items" => $items,
-            "promociones" => $promociones
+            //"promociones" => $promociones
         );
 
         //configurando para enviar a netsuite
