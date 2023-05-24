@@ -19,16 +19,16 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('extraccion:clientes')->hourly();
         $schedule->command('extraccion:direcciones-clientes')->hourly();
-        $schedule->command('extraccion:listas-precios')->weekly();
+        $schedule->command('extraccion:listas-precios')->daily();
         $schedule->command('extraccion:ubicaciones')->daily();
-        $schedule->command('extraccion:inventario')->hourly();
-        $schedule->command('extraccion:catalogo')->daily();
-        $schedule->command('extraccion:kits')->hourly();
-        $schedule->command('extraccion:promociones')->daily();
-        $schedule->command('extraccion:inventario-kits')->hourly();
-        $schedule->command('extraccion:usuarios')->daily();
+        $schedule->command('extraccion:inventario')->everyTenMinutes();
+        $schedule->command('extraccion:inventario-kits')->everyTenMinutes();
+        $schedule->command('extraccion:catalogo')->hourly();
+        $schedule->command('extraccion:kits')->everyTwoHours();
+        $schedule->command('extraccion:promociones')->hourly();
+        $schedule->command('extraccion:usuarios')->everyFourHours();
         $schedule->command('extraccion:medicos')->daily();
-        $schedule->command('extraccion:detalles-inventarios')->hourly();
+        $schedule->command('extraccion:detalles-inventarios')->everyTenMinutes();
 
     }
 

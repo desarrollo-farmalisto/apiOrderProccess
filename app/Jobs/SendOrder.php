@@ -63,47 +63,43 @@ class SendOrder implements ShouldQueue
                         if($producto_catalogo) {
 
                             //productos regular
-                            for ($a=0; $a < $producto_kit->cantidad_regular ; $a++) {
-                                $array_lotes = $this->obtenerLotes($producto_catalogo->producto_netsuite_id, $pedido->ubicacion_id, 1, $producto_catalogo->es_lote);
-                                $items[] = array(
-                                    "id" => $producto_catalogo->producto_netsuite_id,
-                                    "cantidad" => 1,
-                                    "precio" => $producto_catalogo->precio_venta,
-                                    "ubicacion" => $pedido->ubicacion_id,
-                                    "es_lote" => $producto_catalogo->es_lote,
-                                    "items_lotes" => $array_lotes,
-                                    "es_promocion" => 0
-                                );
+                            $array_lotes = $this->obtenerLotes($producto_catalogo->producto_netsuite_id, $pedido->ubicacion_id, $producto_kit->cantidad_regular, $producto_catalogo->es_lote);
+                            $items[] = array(
+                                "id" => $producto_catalogo->producto_netsuite_id,
+                                "cantidad" => $producto_kit->cantidad_regular,
+                                "precio" => $producto_catalogo->precio_venta,
+                                "ubicacion" => $pedido->ubicacion_id,
+                                "es_lote" => $producto_catalogo->es_lote,
+                                "items_lotes" => $array_lotes,
+                                "es_promocion" => 0
+                            );
 
-                                if(!empty($producto->promocion_netsuite_id) && $producto->porcentaje_descuento > 0) {
-                                    $items[] = array(
-                                        "id" => 304545,
-                                        "cantidad" => 1,
-                                        "precio" => "-".$producto->porcentaje_descuento."%",
-                                        "ubicacion" => $pedido->ubicacion_id,
-                                        "es_lote" => 0,
-                                        "es_promocion" => 1
-                                    );
-                                }
+                            if(!empty($producto->promocion_netsuite_id) && $producto->porcentaje_descuento > 0) {
+                                $items[] = array(
+                                    "id" => 304545,
+                                    "cantidad" => 1,
+                                    "precio" => "-".$producto->porcentaje_descuento."%",
+                                    "ubicacion" => $pedido->ubicacion_id,
+                                    "es_lote" => 0,
+                                    "es_promocion" => 1
+                                );
                             }
 
                             //productos regalo
-                            for ($a=0; $a < $producto_kit->cantidad_regalo ; $a++) {
-                                $array_lotes = $this->obtenerLotes($producto_catalogo->producto_netsuite_id, $pedido->ubicacion_id, 1, $producto_catalogo->es_lote);
-                                $items[] = array(
-                                    "id" => $producto_catalogo->producto_netsuite_id,
-                                    "cantidad" => 1,
-                                    "precio" => 0,
-                                    "ubicacion" => $pedido->ubicacion_id,
-                                    "es_lote" => $producto_catalogo->es_lote,
-                                    "items_lotes" => $array_lotes,
-                                    "es_promocion" => 0
-                                );
-                            }
+                            $array_lotes = $this->obtenerLotes($producto_catalogo->producto_netsuite_id, $pedido->ubicacion_id, $producto_kit->cantidad_regalo, $producto_catalogo->es_lote);
+                            $items[] = array(
+                                "id" => $producto_catalogo->producto_netsuite_id,
+                                "cantidad" => $producto_kit->cantidad_regalo,
+                                "precio" => 0,
+                                "ubicacion" => $pedido->ubicacion_id,
+                                "es_lote" => $producto_catalogo->es_lote,
+                                "items_lotes" => $array_lotes,
+                                "es_promocion" => 0
+                            );
 
-                            if(!empty($producto->promocion_netsuite_id)) {
-                                array_push($promociones_ids, $producto->promocion_netsuite_id);
-                            }
+                            // if(!empty($producto->promocion_netsuite_id)) {
+                            //     array_push($promociones_ids, $producto->promocion_netsuite_id);
+                            // }
 
                         }
                     }

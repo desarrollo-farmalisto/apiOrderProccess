@@ -8,6 +8,7 @@ use App\Http\Controllers\MedicosController;
 use App\Http\Controllers\MediosPagosController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\PrincipalController;
+use App\Http\Controllers\ScheduledTasksController;
 use App\Http\Controllers\TransportadoraController;
 use App\Http\Controllers\UbicacionController;
 use App\Http\Controllers\UserController;
@@ -115,6 +116,13 @@ Route::middleware('auth:sanctum')->group(function() {
         Route::get('/get/en-proceso', 'getEnProceso');
         Route::get('/get/pendientes/{fecha}', 'getPendientes');
         Route::get('/get/errores/{fecha}', 'getErrores');
+    });
+
+    //tareas programadas
+    Route::controller(ScheduledTasksController::class)
+        ->prefix('/tareas-programadas')->group(function () {
+        Route::post('/get/errores', 'getErrores');
+        Route::get('/ejecutar/{id}', 'ejecutar');
     });
 
 });
