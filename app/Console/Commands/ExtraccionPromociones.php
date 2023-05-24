@@ -45,7 +45,7 @@ class ExtraccionPromociones extends Command
         try {
 
             //primera consulta a netsuite, consultar cantidades
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_cupones', 0, 1, '', 'local');
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_promotions_tp_galen', 0, 1);
             if(intval($resultado_cantidad) > 0){
 
                 $start = 0;
@@ -59,7 +59,7 @@ class ExtraccionPromociones extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    $resultado = Netsuite::get(2164, null, $start, $end, '', 'local');
+                    $resultado = Netsuite::get(2177, null, $start, $end);
                     $data = json_decode($resultado, true);
                     if(isset($data['error'])){
                         $error = 1;
@@ -165,34 +165,6 @@ class ExtraccionPromociones extends Command
 
     private function ejecutarItemsPromociones($promocion)
     {
-        // $promocion_netsuite_id = null; $items = null;
-
-        // //consultar informacion del traslado
-        // $resultado_consulta = Netsuite::get(2165, $promocion->netsuite_id, 0, 1, '', 'local');
-        // $decodificado_consulta = json_decode($resultado_consulta, true);
-        // if($decodificado_consulta["message"] == 'success'){
-        //     $promocion_netsuite_id = $decodificado_consulta["response"]["id"];
-        //     $items = $decodificado_consulta["response"]["items"];
-        // }
-
-        // //validando los items
-        // if($items != null){
-        //     if(count($items) > 0){
-
-        //         foreach ($items as $key => $value_item) {
-        //             $act_items = array(
-        //                 'promocion_id' => $promocion->id,
-        //                 'promocion_netsuite_id' => $promocion_netsuite_id,
-        //                 'producto_netsuite_id' => $value_item["id"],
-        //                 'producto' => $value_item["nombre"]
-        //             );
-        //             ItemsPromociones::create($act_items);
-        //         }
-        //     }
-        // }
-
-
-
         $result_cant = Netsuite::get(2097, $promocion->id_busqueda_items, 0, 1);
         if(intval($result_cant) > 0){
 
@@ -210,7 +182,7 @@ class ExtraccionPromociones extends Command
                 $start_prom= str_pad($start_prom, mb_strlen($end_prom), "0", STR_PAD_LEFT);
 
                 //consultar a netsuite
-                $resultado_prom = Netsuite::get(2165, $promocion->id_busqueda_items, $start_prom, $end_prom, '', 'local');
+                $resultado_prom = Netsuite::get(2178, $promocion->id_busqueda_items, $start_prom, $end_prom);
                 $data_prom = json_decode($resultado_prom, true);
 
                 //recorrer datos
@@ -227,7 +199,5 @@ class ExtraccionPromociones extends Command
                 }
             }
         }
-
-
     }
 }

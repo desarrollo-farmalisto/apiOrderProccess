@@ -42,7 +42,7 @@ class ExtraccionUbicaciones extends Command
         try {
 
             //primera consulta a netsuite, consultar cantidades
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_ubicaciones_galenic', 0, 1, '', 'local');
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_bodegas_gal', 0, 1);
             if(intval($resultado_cantidad) > 0){
 
                 $start = 0;
@@ -56,7 +56,7 @@ class ExtraccionUbicaciones extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    $resultado = Netsuite::get(2159, null, $start, $end, '', 'local');
+                    $resultado = Netsuite::get(2166, null, $start, $end);
                     $data = json_decode($resultado, true);
                     if(isset($data['error'])){
                         $error = 1;

@@ -97,10 +97,6 @@ class SendOrder implements ShouldQueue
                                 "es_promocion" => 0
                             );
 
-                            // if(!empty($producto->promocion_netsuite_id)) {
-                            //     array_push($promociones_ids, $producto->promocion_netsuite_id);
-                            // }
-
                         }
                     }
                 } else {
@@ -132,17 +128,6 @@ class SendOrder implements ShouldQueue
             }
         }
 
-        //validar para agregar suite promotion
-        // $promociones = array();
-        // $prom = array_unique($promociones_ids);
-        // if(count($prom) > 0) {
-        //     foreach ($prom as $key => $promo) {
-        //         $promociones[] = array(
-        //             "id" => $promo
-        //         );
-        //     }
-        // }
-
         //agregando el header de informacion
         $array_json = array(
             "customform" => 383,
@@ -159,13 +144,12 @@ class SendOrder implements ShouldQueue
             "valor_envio" => intval($pedido->envio),
             "transportadora" => $pedido->transportadora_id,
             "medico_id" => $pedido->medico_id,
-            "items" => $items,
-            //"promociones" => $promociones
+            "items" => $items
         );
 
         //configurando para enviar a netsuite
         $json = json_encode($array_json);
-        $resultado_service = Netsuite::post(2169, $json, 'local');
+        $resultado_service = Netsuite::post(2182, $json);
         $decodificado = json_decode($resultado_service, true);
         if($decodificado["message"] == 'success'){
 

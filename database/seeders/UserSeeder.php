@@ -17,7 +17,7 @@ class UserSeeder extends Seeder
     public function run()
     {
         User::create([
-            'netsuite_id' => 34147,
+            'netsuite_id' => 1,
             'name' => 'Administrador',
             'email' => 'brayan.rodriguez@axa.com.co',
             'password' => Hash::make('123456789'),
