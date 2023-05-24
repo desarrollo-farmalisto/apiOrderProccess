@@ -84,8 +84,8 @@ class ExtraccionCatalogo extends Command
                                 $tasa_iva                           = empty($value["values"]["taxschedule"]) ? null : $value["values"]["taxschedule"][0]["text"];
                                 $iva                                = empty($value["values"]["custitem_ks_tarifa_de_iva"]) ? 0 : $value["values"]["custitem_ks_tarifa_de_iva"][0]["text"];
                                 $precion_con_iva                    = empty($value["values"]["formulanumeric"]) ? 0 : $value["values"]["formulanumeric"];
-                                $cantidad_maxima                    = empty($value["values"]["pricing.maximumquantity"]) ? 0 : $value["values"]["pricing.maximumquantity"];
-                                $cantidad_minima                    = empty($value["values"]["pricing.minimumquantity"]) ? 0 : $value["values"]["pricing.minimumquantity"];
+                                $cantidad_maxima                    = 0;//empty($value["values"]["pricing.maximumquantity"]) ? 0 : $value["values"]["pricing.maximumquantity"];
+                                $cantidad_minima                    = 0;//empty($value["values"]["pricing.minimumquantity"]) ? 0 : $value["values"]["pricing.minimumquantity"];
                                 $embalaje                           = empty($value["values"]["custitem_nso_axa_field_item_fromalm"]) ? 0 : $value["values"]["custitem_nso_axa_field_item_fromalm"];
                                 $es_lote                            = $value["values"]["islotitem"];
                                 $es_controlado                      = $value["values"]["custitem_nso_axa_field_item_medcont"];
