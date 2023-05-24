@@ -56,4 +56,30 @@ class Helper {
         return $data;
     }
 
+    public static function getComandoExtraccion($data)
+    {
+        $array = self::getDataComandosExtracciones();
+        $retorno = $array[$data];
+        return $retorno;
+    }
+
+    public static function getDataComandosExtracciones()
+    {
+        $data = array(
+            1 => "extraccion:clientes",
+            2 => "extraccion:direcciones-clientes",
+            3 => "extraccion:listas-precios",
+            4 => "extraccion:ubicaciones",
+            5 => "extraccion:inventario",
+            6 => "extraccion:inventario-kits",
+            7 => "extraccion:catalogo",
+            8 => "extraccion:kits",
+            9 => "extraccion:promociones",
+            10 => "extraccion:usuarios",
+            11 => "extraccion:medicos",
+            12 => "extraccion:detalles-inventarios"
+        );
+        return $data;
+    }
+
 }
