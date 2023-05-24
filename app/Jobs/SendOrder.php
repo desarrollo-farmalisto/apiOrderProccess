@@ -76,7 +76,7 @@ class SendOrder implements ShouldQueue
 
                             if(!empty($producto->promocion_netsuite_id) && $producto->porcentaje_descuento > 0) {
                                 $items[] = array(
-                                    "id" => 304545,
+                                    "id" => 322283,
                                     "cantidad" => 1,
                                     "precio" => "-".$producto->porcentaje_descuento."%",
                                     "ubicacion" => $pedido->ubicacion_id,
@@ -114,7 +114,7 @@ class SendOrder implements ShouldQueue
 
                     if(!empty($producto->promocion_netsuite_id) && $producto->porcentaje_descuento > 0) {
                         $items[] = array(
-                            "id" => 304545,
+                            "id" => 322283,
                             "cantidad" => 1,
                             "precio" => "-".$producto->porcentaje_descuento."%",
                             "ubicacion" => $pedido->ubicacion_id,
@@ -140,7 +140,7 @@ class SendOrder implements ShouldQueue
             "ubicacion" => $pedido->ubicacion_id,
             "vendedor_id" => ($pedido->usuario) ? $pedido->usuario->netsuite_id : null,
             "medio_pago" => $pedido->medio_pago_id,
-            "tipo_envio" => 304543, // Envio Galenica
+            "tipo_envio" => 322182,//304543, // Envio Galenica
             "valor_envio" => intval($pedido->envio),
             "transportadora" => $pedido->transportadora_id,
             "medico_id" => $pedido->medico_id,
