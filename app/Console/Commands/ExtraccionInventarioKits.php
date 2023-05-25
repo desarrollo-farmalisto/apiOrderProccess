@@ -47,7 +47,7 @@ class ExtraccionInventarioKits extends Command
             if(intval($resultado_cantidad) > 0){
 
                 //vaciar tabla
-                DB::table('inventario_netsuites')->truncate();
+                DB::table('inventario_kits_netsuites')->truncate();
 
                 $start = 0;
                 $end = 0;
