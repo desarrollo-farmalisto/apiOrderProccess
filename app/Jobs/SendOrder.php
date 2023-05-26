@@ -130,7 +130,7 @@ class SendOrder implements ShouldQueue
 
         //agregando el header de informacion
         $array_json = array(
-            "customform" => 389,
+            "customform" => 390,
             "cliente" => $pedido->cliente_id,
             "direccion_id" => $pedido->direccion_id,
             "comentarios" => $pedido->nota,
