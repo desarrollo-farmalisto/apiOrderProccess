@@ -202,6 +202,7 @@ class SendOrder implements ShouldQueue
             ])
             ->whereNotNull('id_lote')
             ->whereNotNull('id_bin')
+            ->orderBy('disponible', 'desc')
             ->get();
             if(count($verificacion) > 0){
                 foreach ($verificacion as $key => $val_veri) {
