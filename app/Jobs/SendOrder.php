@@ -199,7 +199,10 @@ class SendOrder implements ShouldQueue
             $verificacion = DetallesInventarios::where([
                 ['item_id', '=', $producto_id],
                 ['ubicacion_id', '=', $ubicacion_id]
-            ])->get();
+            ])
+            ->whereNotNull('id_lote')
+            ->whereNotNull('id_bin')
+            ->get();
             if(count($verificacion) > 0){
                 foreach ($verificacion as $key => $val_veri) {
                     if($val_veri->disponible >= $cantidad){
