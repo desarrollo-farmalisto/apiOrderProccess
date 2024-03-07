@@ -168,7 +168,7 @@ class PedidoController extends Controller
                     $pedido_nuevo->estado = 3;
                     $pedido_nuevo->save();
 
-                    SendOrder::dispatch($pedido_id);
+                    SendOrder::dispatch($pedido_id)->onQueue('tp_galenica')->onConnection('tp_galenica_project');
                 }
 
             } else {
@@ -554,7 +554,7 @@ class PedidoController extends Controller
                 'estado_numero' => 3
             );
 
-            if(!SendOrder::dispatch($id)){
+            if(!SendOrder::dispatch($id)->onQueue('tp_galenica')->onConnection('tp_galenica_project')){
                 $succes = false;
                 $errors = 'Error, se presento un problema en el JOB para enviar el pedido!';
             }

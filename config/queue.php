@@ -62,10 +62,10 @@ return [
             'after_commit' => false,
         ],
 
-        'redis' => [
+        'tp_galenica_project' => [
             'driver' => 'redis',
             'connection' => 'default',
-            'queue' => env('REDIS_QUEUE', 'default'),
+            'queue' => 'tp_galenica',
             'retry_after' => 90,
             'block_for' => null,
             'after_commit' => false,
