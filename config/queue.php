@@ -66,7 +66,7 @@ return [
             'driver' => 'redis',
             'connection' => 'default',
             'queue' => 'tp_galenica',
-            'retry_after' => 90,
+            'retry_after' => 9000,
             'block_for' => null,
             'after_commit' => false,
         ],
