@@ -11,7 +11,7 @@ class UbicacionController extends Controller
     public function get()
     {
         return response()->json(array(
-            "data" => Ubicacion::select('netsuite_id AS value', 'nombre AS label')->where('isinactive', 0)->orderBy('id')->get()
+            "data" => Ubicacion::select('netsuite_id AS value', 'nombre AS label', 'ciudad')->where('isinactive', 0)->orderBy('id')->get(),
         ));
     }
 
