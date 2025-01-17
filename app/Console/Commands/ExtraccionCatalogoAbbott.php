@@ -55,11 +55,12 @@ class ExtraccionCatalogoAbbott extends Command
         $valores_actualizados = 0;
         $valores_creados = 0;
         $cantidad_busqueda = 0;
-
+        
         try {
 
             //primera consulta a netsuite, consultar cantidades
             $cantidad_busqueda = Netsuite::get(2097, $busqueda_guardada, 0, 1);
+            
             if(intval($cantidad_busqueda) > 0){
                 
                 //vaciar tabla
@@ -94,7 +95,7 @@ class ExtraccionCatalogoAbbott extends Command
                                 $netsuite_id  = empty($value["values"]["internalid"]) ? null : $value["values"]["internalid"][0]["value"];
                                 $ean          = empty($value["values"]["upccode"]) ? null : $value["values"]["upccode"];
 
-                                $product = Catalogo::where('producto_netsuite_id',$netsuite_id)->first();
+                                $product = Catalogo::where('producto_netsuite_id',intval($netsuite_id))->first();
                                 
                                 if($product){
                                     $insertar[] = [
@@ -107,7 +108,8 @@ class ExtraccionCatalogoAbbott extends Command
                                     
                                     $valores_creados++;
                                 }
-                            }                            
+                            }        
+                                            
                             // Insertar nuevos clientes
                             if (!empty($insertar)) {
                                 ProductoIntegracion::insert($insertar);

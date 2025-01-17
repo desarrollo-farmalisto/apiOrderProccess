@@ -29,6 +29,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('extraccion:usuarios')->everyFourHours();
         $schedule->command('extraccion:medicos')->daily();
         $schedule->command('extraccion:detalles-inventarios')->everyTenMinutes();
+        $schedule->command('extraccion:catalogo-abbott')->daily();
 
     }
 

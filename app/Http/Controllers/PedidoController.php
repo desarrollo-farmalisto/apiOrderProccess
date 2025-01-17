@@ -5,15 +5,24 @@ namespace App\Http\Controllers;
 use App\Helper\Helper;
 use App\Jobs\SendOrder;
 use App\Models\Catalogo;
+use App\Models\Cliente;
 use App\Models\DetallesPedidos;
 use App\Models\Pedidos;
+use App\Models\ProductoIntegracion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 
 class PedidoController extends Controller
 {
+    private $abbott_url;
+    public function __construct()
+    {
+        $abbott = config('services.Abbott');
+        $this->abbott_url = $abbott['URL'];
+    }
 
     public function getValoresEnvios()
     {
@@ -81,6 +90,7 @@ class PedidoController extends Controller
 
     public function create(Request $request)
     {
+
         $validator = Validator::make($request->all(), [
             'type' => 'required',
             'cliente' => 'required|numeric',
@@ -131,6 +141,7 @@ class PedidoController extends Controller
         );
 
         $pedido_id = null;
+        $array_product_abbott = [];
         try {
             if($result_crete = Pedidos::create($crear_header)) {
 
@@ -159,6 +170,19 @@ class PedidoController extends Controller
                         );
                         DetallesPedidos::create($array_detalle);
 
+                        $product = Catalogo::where('producto_netsuite_id', intval($item["producto_id"]))->first();
+                        
+
+                        
+                        $exist = ProductoIntegracion::where('producto_id', $product->id)->exists();
+                        
+                        
+                        if ($exist) {
+                            $array_product_abbott[] = [
+                                'ean' => $item["ean"],
+                                'quantity' => $item["cantidad"]
+                            ];
+                        }                           
                     }
                 }
 
@@ -168,7 +192,27 @@ class PedidoController extends Controller
                     $pedido_nuevo->estado = 3;
                     $pedido_nuevo->save();
 
-                    SendOrder::dispatch($pedido_id);
+                    $sendOrder = SendOrder::dispatch($pedido_id);
+
+                    if($sendOrder){
+                        
+                        if (!empty($array_product_abbott)) {
+                            $responseTransaction = '';
+                            
+                            $responseBody = $this->sendValidateClientAbbot($request->cliente,$request->ubicacion);
+                            
+                            if ($responseBody['status'] == 202 && $responseBody['info']['Status']['Code'] == 0 ) {
+                                $reponseProduct = $this->sendProductsAbbott($array_product_abbott, $responseBody, $request->cliente);
+                                
+                                if ( $reponseProduct['status'] == 202 && isset($reponseProduct['info']['Status']['Code']) && $reponseProduct['info']['Status']['Code'] == 0 ) {
+                                    $responseTransaction = $this->sendValidatePurchaseAbbot($reponseProduct);
+                                    if ( $responseTransaction['status'] == 202 && isset($responseTransaction['info']['Status']['Code']) && $responseTransaction['info']['Status']['Code'] == 0 ) {
+                                        $error = 0;
+                                    }
+                                }
+                            }
+                        }
+                    }                    
                 }
 
             } else {
@@ -189,6 +233,82 @@ class PedidoController extends Controller
             'errors' => array(),
             'data' => $pedido_id
         ]);
+    }
+
+    public function sendValidateClientAbbot($clienteId,$ubicacion_id){
+        try {
+            $cliente = Cliente::where('netsuite_id',$clienteId)->first();
+            $url = $this->abbott_url.'client-validation';
+            
+            $data = [
+                'validateClient' =>json_encode( [
+                    'document' => (string) $cliente->documento,
+                    'code_warehouse' => '01GALBTA',
+                    'employee' => 'toma_pedido',
+                    'warehouse' => $ubicacion_id,
+                ])
+            ];
+
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+            ])->post($url, $data);
+
+            return $response->json();
+        
+        } catch (\Exception $e) {
+            return [
+                'status' => 500,
+                'info' => 'Opss, Ocurrió un error en el método sendValidateClientAbbot del controller CarroController',
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+
+    public function sendProductsAbbott($products, $clientValidate, $clienteId){
+        try {
+            $cliente = Cliente::where('netsuite_id',$clienteId)->first();
+            $url = $this->abbott_url.'quotation-transaction';
+
+            $data = [
+                'products' => $products,
+                'code_warehouse' => $clientValidate['warehouse'],
+                'document' => (string) $cliente->documento,
+                'token' => $clientValidate['info']['Data']['Token']
+            ];
+
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+            ])->post($url, $data);
+            
+            return $response->json();
+        } catch (\Exception $e) {
+            return [
+                'status' => 500,
+                'info' => 'Opss, Ocurrió un error en el método sendProductsAbbott del controller CarroController',
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+
+    public function sendValidatePurchaseAbbot($transaction){
+        try {
+
+            $url = $this->abbott_url.'confirm-quotation';
+            $data = [
+                'transaction_id' => $transaction['transaction']['original']['transaction_id']
+            ];
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+            ])->post($url, $data);
+            
+            return $response->json();
+        } catch (\Exception $e) {
+            return [
+                'status' => 500,
+                'info' => 'Opss, Ocurrió un error en el método sendValidatePurchaseAbbot del controller CarroController',
+                'message' => $e->getMessage()
+            ];
+        }
     }
 
     public function getPedidosUser($fecha_inicio = null, $fecha_fin = null)
@@ -557,6 +677,39 @@ class PedidoController extends Controller
             if(!SendOrder::dispatch($id)){
                 $succes = false;
                 $errors = 'Error, se presento un problema en el JOB para enviar el pedido!';
+            }else{
+                $array_product_abbott = [];
+                $detallesPedido = DetallesPedidos::where('pedido_id', $id)->get();
+                foreach($detallesPedido as $detallePedido){
+                    
+                    $product = Catalogo::where('producto_netsuite_id', intval($detallePedido->producto_netsuite_id))->first();
+                    $exist = ProductoIntegracion::where('producto_id', $product->id)->exists();
+                    
+                    if ($exist) {
+                        $array_product_abbott[] = [
+                            'ean' => $detallePedido->producto_ean,
+                            'quantity' => $detallePedido->cantidad
+                        ];
+                    }      
+                }
+
+                if (!empty($array_product_abbott)) {
+                    $responseTransaction = '';
+                    
+                    $responseBody = $this->sendValidateClientAbbot($pedido->cliente_id,$pedido->ubicacion_id);
+                    
+                    if ($responseBody['status'] == 202 && $responseBody['info']['Status']['Code'] == 0 ) {
+                        $reponseProduct = $this->sendProductsAbbott($array_product_abbott, $responseBody, $pedido->cliente_id);
+                        
+                        if ( $reponseProduct['status'] == 202 && isset($reponseProduct['info']['Status']['Code']) && $reponseProduct['info']['Status']['Code'] == 0 ) {
+                            $responseTransaction = $this->sendValidatePurchaseAbbot($reponseProduct);
+                            
+                            if ( $responseTransaction['status'] == 202 && isset($responseTransaction['info']['Status']['Code']) && $responseTransaction['info']['Status']['Code'] == 0 ) {
+                                $error = 0;
+                            }
+                        }
+                    }
+                }
             }
 
         } else {

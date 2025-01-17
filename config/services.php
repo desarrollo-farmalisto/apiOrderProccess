@@ -45,6 +45,11 @@ return [
         'CONSUMER_SECRET' => env('SANDBOX_NETSUITE_CONSUMER_SECRET'),
         'TOKEN_ID' => env('SANDBOX_NETSUITE_TOKEN_ID'),
         'TOKEN_SECRET' => env('SANDBOX_NETSUITE_TOKEN_SECRET'),
-    ]
+    ],
+
+     //Abbott contigo
+    'Abbott' => [
+        'URL' => env('PRODUCTION_MIDDLEWARE_ABBOTT_URL'),
+    ],
 
 ];
