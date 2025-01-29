@@ -94,10 +94,10 @@ class ExtraccionCatalogoAbbott extends Command
                                 
                                 $netsuite_id  = empty($value["values"]["internalid"]) ? null : $value["values"]["internalid"][0]["value"];
                                 $ean          = empty($value["values"]["upccode"]) ? null : $value["values"]["upccode"];
-
+                                $canje        = empty($value["values"]["custitem_axa_id_corres_com_"]) ? null : $value["values"]["custitem_axa_id_corres_com_"];
                                 $product = Catalogo::where('producto_netsuite_id',intval($netsuite_id))->first();
                                 
-                                if($product){
+                                if($product && !isset($canje)){
                                     $insertar[] = [
                                         'integracion_id' => $program->id,
                                         'producto_id' => $product->id,
@@ -107,7 +107,7 @@ class ExtraccionCatalogoAbbott extends Command
                                     ];
                                     
                                     $valores_creados++;
-                                }
+                                }         
                             }        
                                             
                             // Insertar nuevos clientes
