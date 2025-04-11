@@ -6,6 +6,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ColasController;
 use App\Http\Controllers\MedicosController;
 use App\Http\Controllers\MediosPagosController;
+use App\Http\Controllers\OrdenTrasladoController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\PrincipalController;
 use App\Http\Controllers\ScheduledTasksController;
@@ -25,9 +26,19 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+// Route::controller(OrdenTrasladoController::class)
+//    ->prefix('/ordenes/traslados')->group(function () {
+//        Route::post('/guardar', 'guardar');
+//        Route::get('/index/{type?}','index');
+//        Route::get('/productos/{id}', 'productos');
+//        Route::get('/ubicacion', 'ubicacion');
+//        Route::get('/ubicacionAxa', 'ubicacionAxa');
+
+//    });
 
 //Iniciar Sesión
 Route::post('/login', [AuthController::class, 'login']);
+
 
 Route::middleware('auth:sanctum')->group(function() {
 
@@ -125,5 +136,25 @@ Route::middleware('auth:sanctum')->group(function() {
         Route::get('/ejecutar/{id}', 'ejecutar');
     });
 
+     //ordenes traslado
+   Route::controller(OrdenTrasladoController::class)
+   ->prefix('/ordenes/traslados')->group(function () {
+       Route::post('/guardar', 'guardar');
+       Route::post('/guardarPedido', 'guardarPedido');
+       Route::get('/index/{type?}','index');
+       Route::get('/indexIntercompany/{type?}','indexIntercompany');
+       Route::get('/productos/{id}', 'productos');
+       Route::get('/ubicacion', 'ubicacion');
+       Route::get('/ubicacionAxa', 'ubicacionAxa');
+       Route::get('/Productosaxa/{id}', 'Productosaxa');
+       Route::get('/ubicacionesConInventario/{producto_id}/por/{tipo}', 'ubicacionesConInventario');
+        
+       
+   });
+
 });
 
+
+  
+
+ 

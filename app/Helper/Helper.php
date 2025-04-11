@@ -2,12 +2,13 @@
 
 namespace App\Helper;
 
-class Helper {
+class Helper
+{
 
     public static function arreglarFecha($vfecha)
     {
-        $fch=explode("/",$vfecha);
-        $tfecha=$fch[2]."/".$fch[1]."/".$fch[0];
+        $fch = explode("/", $vfecha);
+        $tfecha = $fch[2] . "/" . $fch[1] . "/" . $fch[0];
         return $tfecha;
     }
 
@@ -56,6 +57,29 @@ class Helper {
         return $data;
     }
 
+    public static function getEstadoOrdenes($estado = null)
+    {
+        $data = array(
+            1 => "Aprobación pendiente",
+            2 => "Ejecución de la orden pendiente",
+            3 => "Pendiente de recibir",
+            4 => "Mercancía recibida",
+        );
+
+        // Si no se proporciona estado o es null, devuelve el array completo
+        if ($estado === null) {
+            return $data;
+        }
+
+        // Si el estado existe en el array, devuelve ese estado
+        if (isset($data[$estado])) {
+            return $data[$estado];
+        }
+
+        // Si no existe, devuelve "A" por defecto
+        return "A";
+    }
+
     public static function getComandoExtraccion($data)
     {
         $array = self::getDataComandosExtracciones();
@@ -81,5 +105,4 @@ class Helper {
         );
         return $data;
     }
-
 }
