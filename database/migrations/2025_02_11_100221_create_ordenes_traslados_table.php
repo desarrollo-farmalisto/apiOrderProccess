@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->bigInteger("orden_id")->nullable();
             $table->string("tipo_orden");
+            $table->string("canal")->nullable();
             $table->string("desde_compania");
             $table->string("para_compania");
             $table->string("desde_ubicacion");

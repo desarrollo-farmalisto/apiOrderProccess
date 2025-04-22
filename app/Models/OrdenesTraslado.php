@@ -12,6 +12,7 @@ class OrdenesTraslado extends Model
     protected $fillable = [
         'orden_id',
         'tipo_orden',
+        'canal',
         'desde_compania',
         'para_compania',
         'desde_ubicacion',

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
+use App\Models\OrdenesTraslado;
 
 class PedidoController extends Controller
 {
@@ -186,6 +187,14 @@ class PedidoController extends Controller
                     }
                 }
 
+                //Buscar las ot y le asigno pedido_id
+                $idsTraslado = $request->id_traslado; 
+                foreach ($idsTraslado as $idTraslado) {
+                    OrdenesTraslado::where('orden_id', null)
+                                   ->where('id', $idTraslado['id'])
+                                   ->update(['orden_id' => $pedido_id]);
+                }
+
                 if($request->type == 2) {
 
                     $pedido_nuevo = Pedidos::findOrFail($pedido_id);
@@ -225,7 +234,13 @@ class PedidoController extends Controller
                 ]);
             }
         } catch (\Throwable $th) {
-            return response()->json($th);
+            return response()->json([
+                'success' => false,
+                'errors' => array(
+                    "error" => $th->getMessage()
+                ),
+                'data' => []
+            ]);
         }
 
         return response()->json([
@@ -324,11 +339,20 @@ class PedidoController extends Controller
         $retorno = array();
         $data = DB::select("SELECT p.id, u.name AS usuario, CONCAT(c.documento, ' - ', c.nombre) AS cliente,
         dc.direccion_corta AS direccion, p.cantidad_items, p.cantidad_items_solicitado,
-        p.total, p.metodo_pago, p.estado, p.netsuite_id
+        p.total, p.metodo_pago, p.estado, p.netsuite_id,
+         CASE 
+        WHEN EXISTS (
+            SELECT 1 
+            FROM ordenes_traslados ot2 
+            WHERE ot2.orden_id = p.id AND ot2.estado_netsuite <> 'D'
+        ) THEN 1
+        ELSE 0
+    END AS tiene_orden_traslado_activa
         FROM pedidos AS p
         LEFT JOIN users AS u ON p.user_id = u.id
         LEFT JOIN clientes AS c ON p.cliente_id = c.netsuite_id
         LEFT JOIN direcciones_clientes AS dc ON p.direccion_id = dc.netsuite_id
+        LEFT JOIN ordenes_traslados AS ot ON p.id = ot.orden_id
         WHERE p.user_id = $user_id AND p.fecha BETWEEN '$fecha_inicio' AND '$fecha_fin'");
 
         if(count($data) > 0){
@@ -345,7 +369,8 @@ class PedidoController extends Controller
                     'total' => "$" . number_format($value->total, 0, ",", "."),
                     'metodo_pago' => Helper::getMetodoPago($value->metodo_pago),
                     'estado' => Helper::getEstadoPedido($value->estado),
-                    'estado_numero' => $value->estado
+                    'estado_numero' => $value->estado,
+                    'traslados' => $value->tiene_orden_traslado_activa,
                 );
 
             }

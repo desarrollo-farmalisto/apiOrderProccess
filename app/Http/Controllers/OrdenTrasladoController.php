@@ -40,6 +40,7 @@ class OrdenTrasladoController extends Controller
                 $insertar = [
                     'orden_id' => $request->orden_id,
                     'tipo_orden' => $request->tipo_orden,
+                    'canal' => $request->canal,
                     'desde_compania' => $request->desde_compania,
                     'para_compania' => $request->para_compania,
                     'desde_ubicacion' => $request->desde_ubicacion,
@@ -67,6 +68,7 @@ class OrdenTrasladoController extends Controller
                     if ($enviar_resultado['estado']) {
                         return response()->json([
                             'error' => false,
+                            'id_orden' => $id_orden,
                             'mensaje' => $enviar_resultado['mensaje']
                         ]);
                     } else {
@@ -176,8 +178,11 @@ class OrdenTrasladoController extends Controller
                 'mensaje' => $mensaje
             );
             LogsNetsuites::create($agg_info);
-
-            return true;
+            $response = array(
+                'estado' => true,
+                'mensaje' => 'Se creo la orden netsuite con exito',
+            );
+            return $response;
 
         } else {
 
@@ -197,7 +202,11 @@ class OrdenTrasladoController extends Controller
             );
             LogsNetsuites::create($agg_info);
 
-            return false;
+            $response = array(
+                'estado' => false,
+                'mensaje' => 'Error al crear orden de traslado',
+            );
+            return $response;
 
         }
 
@@ -415,51 +424,90 @@ class OrdenTrasladoController extends Controller
     public function guardarPedido(Request $request)
     {
         try {
-
             $productos = $request->productos;
             if (is_array($productos) && count($productos) > 0) {
-                $insertar = [
-                    'orden_id' => $request->orden_id,
-                    'tipo_orden' => $request->tipo_orden,
-                    'desde_compania' => $request->desde_compania,
-                    'para_compania' => $request->para_compania,
-                    'desde_ubicacion' => $request->desde_ubicacion,
-                    'para_ubicacion' => $request->para_ubicacion,
-                    'empleado' => 14161,
-                    'comentarios' => $request->comentarios,
-                    'centro_costo' => 1,
-                    'estado' => 1
-                ];
-                // dd($insertar);  
-                if ($result = OrdenesTraslado::create($insertar)) {
-                    $id_orden = $result->id;
-                    foreach ($productos as $producto) {
-                        $detalle = [
-                            'orden_traslado_id' => $id_orden,
-                            'item_id' => $producto['netsuite_id'],
-                            'ean' => $producto['ean'],
-                            'titulo' => $producto['titulo'],
-                            'cantidad_solicitado' => $producto['cantidad_solicitado'],
-                        ];
-                        DetallesOrdenesTraslado::create($detalle);
-                    }
 
-                    $enviar_resultado = $this->enviarNetsuite($id_orden);
-                    if ($enviar_resultado['estado']) {
-                        return response()->json([
-                            'error' => false,
+                $productos_por_ubicacion = [];
+                
+                
+                foreach ($productos as $producto) {
+                    $ubicacion = $producto['desde_ubicacion'] ?? $request->desde_ubicacion;
+                    if (!isset($productos_por_ubicacion[$ubicacion])) {
+                        $productos_por_ubicacion[$ubicacion] = [];
+                    }
+                    $productos_por_ubicacion[$ubicacion][] = $producto;
+                }
+                
+                $resultados = [];
+                $cantidad = count($productos_por_ubicacion);
+                
+
+                
+                foreach ($productos_por_ubicacion as $ubicacion => $productos_ubicacion) {
+                    /* return response()->json([
+                        'error' => true,
+                        'mensaje' => $ubicacion,
+                    ]); */
+                    $insertar = [
+                        'tipo_orden' => $request->tipo_orden,
+                        'canal' => $request->canal,
+                        'desde_compania' => $request->desde_compania,
+                        'para_compania' => $request->para_compania,
+                        'desde_ubicacion' => $ubicacion, 
+                        'para_ubicacion' => $request->para_ubicacion,
+                        'empleado' => 14161,
+                        'comentarios' => $request->comentarios,
+                        'centro_costo' => 1,
+                        'estado' => 1
+                    ];
+                    
+                    if ($result = OrdenesTraslado::create($insertar)) {
+                        $id_orden = $result->id;
+                        
+                        foreach ($productos_ubicacion as $producto) {
+                            /* return response()->json([
+                                'error' => true,
+                                'mensaje' => $producto,
+                            ]); */ 
+                            $detalle = [
+                                'orden_traslado_id' => $id_orden,
+                                'item_id' => $producto['producto_id'],
+                                'ean' => $producto['ean'],
+                                'titulo' => $producto['producto'],
+                                'cantidad_solicitado' => $producto['cantidad'],
+                            ];
+                            DetallesOrdenesTraslado::create($detalle);
+                        }
+                        
+                        $enviar_resultado = $this->enviarNetsuite($id_orden);
+                        $resultados[] = [
+                            'orden_id' => $id_orden,
+                            'ubicacion' => $ubicacion,
+                            'estado' => $enviar_resultado['estado'],
                             'mensaje' => $enviar_resultado['mensaje']
-                        ]);
+                        ];
                     } else {
                         return response()->json([
                             'error' => true,
-                            'mensaje' => 'Error al crear el traslado en Netsuite.'
+                            'mensaje' => 'Error al crear la orden de traslado para la ubicación ' . $ubicacion
                         ]);
                     }
+                }
+                
+                // Verificar si todas las órdenes se crearon correctamente
+                $errores = array_filter($resultados, function($r) { return !$r['estado']; });
+                
+                if (empty($errores)) {
+                    return response()->json([
+                        'error' => false,
+                        'mensaje' => 'Se crearon ' . count($resultados) . ' órdenes de traslado correctamente.',
+                        'resultados' => $resultados
+                    ]);
                 } else {
                     return response()->json([
                         'error' => true,
-                        'mensaje' => 'Error al crear la orden de traslado.'
+                        'mensaje' => 'Algunas órdenes de traslado no pudieron ser creadas en Netsuite.',
+                        'resultados' => $resultados
                     ]);
                 }
             } else {
@@ -472,6 +520,7 @@ class OrdenTrasladoController extends Controller
             return response()->json([
                 'error' => true,
                 'mensaje' => $th->getMessage(),
+                'linea' =>$th->getLine(),
             ]);
         }
     }
