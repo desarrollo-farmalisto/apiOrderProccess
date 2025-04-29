@@ -16,20 +16,31 @@ use Illuminate\Support\Facades\Log;
 
 class OrdenTrasladoController extends Controller
 {
-    public function index($type = null)
+     public function index($type = null)
     {
-        if (is_null($type)) {
+
+        try {
+            if (is_null($type)) {
+                return response()->json([
+                    'error' => 'El parámetro tipo_orden es obligatorio.',
+                    'code' => 400
+                ]);
+            }
+            $orders = OrdenesTraslado::where('tipo_orden', $type)->with('ubicacion', 'ubicacionPara', 'ubicacionAxa')->get();
+    
             return response()->json([
-                'error' => 'El parámetro tipo_orden es obligatorio.',
-                'code' => 400
+                'data' => $orders
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'data' => $th->getMessage(),
+            	'type' => $type,
             ]);
         }
-        $orders = OrdenesTraslado::where('tipo_orden', $type)->with('ubicacion', 'ubicacionPara', 'ubicacionAxa')->get();
 
-        return response()->json([
-            'data' => $orders
-        ]);
+        
     }
+
 
     public function guardar(Request $request)
     {

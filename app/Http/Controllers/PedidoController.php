@@ -189,11 +189,14 @@ class PedidoController extends Controller
 
                 //Buscar las ot y le asigno pedido_id
                 $idsTraslado = $request->id_traslado; 
-                foreach ($idsTraslado as $idTraslado) {
-                    OrdenesTraslado::where('orden_id', null)
-                                   ->where('id', $idTraslado['id'])
-                                   ->update(['orden_id' => $pedido_id]);
+            	if($idsTraslado) {
+                	foreach ($idsTraslado as $idTraslado) {
+                    	OrdenesTraslado::where('orden_id', null)
+                        	           ->where('id', $idTraslado['id'])
+                            	       ->update(['orden_id' => $pedido_id]);
+                	}
                 }
+                
 
                 if($request->type == 2) {
 
@@ -204,7 +207,7 @@ class PedidoController extends Controller
                     $sendOrder = SendOrder::dispatch($pedido_id);
 
                     if($sendOrder){
-                        
+
                         if (!empty($array_product_abbott)) {
                             $responseTransaction = '';
                             
@@ -212,11 +215,11 @@ class PedidoController extends Controller
                             
                             if ($responseBody['status'] == 202 && $responseBody['info']['Status']['Code'] == 0 ) {
                                 $reponseProduct = $this->sendProductsAbbott($array_product_abbott, $responseBody, $request->cliente);
-                                
+                            
                                 if ( $reponseProduct['status'] == 202 && isset($reponseProduct['info']['Status']['Code']) && $reponseProduct['info']['Status']['Code'] == 0 ) {
                                     $responseTransaction = $this->sendValidatePurchaseAbbot($reponseProduct);
                                     if ( $responseTransaction['status'] == 202 && isset($responseTransaction['info']['Status']['Code']) && $responseTransaction['info']['Status']['Code'] == 0 ) {
-                                        $error = 0;
+                                        $error = 0;                                       
                                     }
                                 }
                             }
@@ -722,7 +725,6 @@ class PedidoController extends Controller
                     $responseTransaction = '';
                     
                     $responseBody = $this->sendValidateClientAbbot($pedido->cliente_id,$pedido->ubicacion_id);
-                    
                     if ($responseBody['status'] == 202 && $responseBody['info']['Status']['Code'] == 0 ) {
                         $reponseProduct = $this->sendProductsAbbott($array_product_abbott, $responseBody, $pedido->cliente_id);
                         
