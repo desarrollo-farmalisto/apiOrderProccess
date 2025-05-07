@@ -40,7 +40,7 @@ class EnvioTraslado extends Command
             $hoy = Carbon::today();
             
             // Si quieres que se ejecute solo los lunes (día 1 de la semana en Carbon)
-            /* if ($hoy->dayOfWeek == Carbon::MONDAY)  { */
+            if ($hoy->dayOfWeek == Carbon::MONDAY)  { 
                 // Calcular fechas de la semana anterior (desde el lunes hasta el domingo)
                 $finSemanaAnterior = $hoy->copy()->subDay(); // Domingo (ayer)
                 $inicioSemanaAnterior = $finSemanaAnterior->copy()->startOfWeek(); // Lunes de la semana anterior
@@ -63,7 +63,8 @@ class EnvioTraslado extends Command
                 Mail::send('exports.ordenes', 
                     ['fechaInicio' => $fechaInicio, 'fechaFin' => $fechaFin], 
                     function ($message) use ($nombreArchivo, $adjunto, $fechaInicio, $fechaFin) {
-                        $message->to(['auxiliar.desarrollo@axa.com.co', 'katherine.rincon@axa.com.co'])
+                        $message->to(['auxiliar.desarrollo@axa.com.co', 'katherine.rincon@axa.com.co', 'asistente2.abastecimiento@axa.com.co',
+                        'alvaro@axa.com.co', 'jorge.pinto@axa.com.co'])
                             ->subject('Reporte semanal de órdenes: ' . $fechaInicio . ' al ' . $fechaFin)
                             ->attach($adjunto);
                     }
@@ -80,10 +81,10 @@ class EnvioTraslado extends Command
                 ]);
                 
                 return Command::SUCCESS;
-            /* }  else {
+             }  else {
                 $this->info('Este comando solo se ejecuta los lunes.');
                 return Command::SUCCESS;
-            }  */
+            }  
         } catch (\Throwable $th) {
             // Registrar error en log
             LogScheduleTask::create([
