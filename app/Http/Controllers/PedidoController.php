@@ -20,8 +20,8 @@ class PedidoController extends Controller
         return response()->json(array(
             "data" => [
                 array(
-                    'value' => 2500,
-                    'label' => 'Envio Galenica - $2.500'
+                    'value' => 3500,
+                    'label' => 'Envio Galenica - $3.500'
                 ),
                 array(
                     'value' => 5000,
@@ -168,7 +168,7 @@ class PedidoController extends Controller
                     $pedido_nuevo->estado = 3;
                     $pedido_nuevo->save();
 
-                    SendOrder::dispatch($pedido_id)->onQueue('tp_galenica');
+                    SendOrder::dispatch($pedido_id)->onQueue('tp_galenica')->onConnection('tp_galenica_project');
                 }
 
             } else {
@@ -390,10 +390,10 @@ class PedidoController extends Controller
             }
 
             $valor_envio = array();
-            if(intval($pedido->envio) == 2500) {
+            if(intval($pedido->envio) == 3500) {
                 $valor_envio = array(
-                    "value" => 2500,
-                    "label" => 'Envio Galenica - $2.500'
+                    "value" => 3500,
+                    "label" => 'Envio Galenica - $3.500'
                 );
             } else if(intval($pedido->envio) == 5000) {
                 $valor_envio = array(
@@ -554,7 +554,7 @@ class PedidoController extends Controller
                 'estado_numero' => 3
             );
 
-            if(!SendOrder::dispatch($id)->onQueue('tp_galenica')){
+            if(!SendOrder::dispatch($id)->onQueue('tp_galenica')->onConnection('tp_galenica_project')){
                 $succes = false;
                 $errors = 'Error, se presento un problema en el JOB para enviar el pedido!';
             }
