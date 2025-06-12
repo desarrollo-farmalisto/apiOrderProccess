@@ -4,6 +4,7 @@ use App\Http\Controllers\AdministradorController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ColasController;
+use App\Http\Controllers\JobExecutionController;
 use App\Http\Controllers\MedicosController;
 use App\Http\Controllers\MediosPagosController;
 use App\Http\Controllers\OrdenTrasladoController;
@@ -154,7 +155,5 @@ Route::middleware('auth:sanctum')->group(function() {
 
 });
 
+Route::post('/SendOrder', [JobExecutionController::class, 'SendOrder']);
 
-  
-
- 

@@ -76,7 +76,7 @@ class SendOrder implements ShouldQueue
 
                             if(!empty($producto->promocion_netsuite_id) && $producto->porcentaje_descuento > 0) {
                                 $items[] = array(
-                                    "id" => 304545,
+                                    "id" => 322283,
                                     "cantidad" => 1,
                                     "precio" => "-".$producto->porcentaje_descuento."%",
                                     "ubicacion" => $pedido->ubicacion_id,
@@ -97,10 +97,6 @@ class SendOrder implements ShouldQueue
                                 "es_promocion" => 0
                             );
 
-                            // if(!empty($producto->promocion_netsuite_id)) {
-                            //     array_push($promociones_ids, $producto->promocion_netsuite_id);
-                            // }
-
                         }
                     }
                 } else {
@@ -118,7 +114,7 @@ class SendOrder implements ShouldQueue
 
                     if(!empty($producto->promocion_netsuite_id) && $producto->porcentaje_descuento > 0) {
                         $items[] = array(
-                            "id" => 304545,
+                            "id" => 322283,
                             "cantidad" => 1,
                             "precio" => "-".$producto->porcentaje_descuento."%",
                             "ubicacion" => $pedido->ubicacion_id,
@@ -132,20 +128,9 @@ class SendOrder implements ShouldQueue
             }
         }
 
-        //validar para agregar suite promotion
-        // $promociones = array();
-        // $prom = array_unique($promociones_ids);
-        // if(count($prom) > 0) {
-        //     foreach ($prom as $key => $promo) {
-        //         $promociones[] = array(
-        //             "id" => $promo
-        //         );
-        //     }
-        // }
-
         //agregando el header de informacion
         $array_json = array(
-            "customform" => 383,
+            "customform" => 407,
             "cliente" => $pedido->cliente_id,
             "direccion_id" => $pedido->direccion_id,
             "comentarios" => $pedido->nota,
@@ -155,17 +140,16 @@ class SendOrder implements ShouldQueue
             "ubicacion" => $pedido->ubicacion_id,
             "vendedor_id" => ($pedido->usuario) ? $pedido->usuario->netsuite_id : null,
             "medio_pago" => $pedido->medio_pago_id,
-            "tipo_envio" => 304543, // Envio Galenica
+            "tipo_envio" => 322182,//304543, // Envio Galenica
             "valor_envio" => intval($pedido->envio),
             "transportadora" => $pedido->transportadora_id,
             "medico_id" => $pedido->medico_id,
-            "items" => $items,
-            //"promociones" => $promociones
+            "items" => $items
         );
 
         //configurando para enviar a netsuite
         $json = json_encode($array_json);
-        $resultado_service = Netsuite::post(2169, $json, 'local');
+        $resultado_service = Netsuite::post(2182, $json);
         $decodificado = json_decode($resultado_service, true);
         if($decodificado["message"] == 'success'){
 
@@ -215,7 +199,11 @@ class SendOrder implements ShouldQueue
             $verificacion = DetallesInventarios::where([
                 ['item_id', '=', $producto_id],
                 ['ubicacion_id', '=', $ubicacion_id]
-            ])->get();
+            ])
+            ->whereNotNull('id_lote')
+            ->whereNotNull('id_bin')
+            ->orderBy('disponible', 'desc')
+            ->get();
             if(count($verificacion) > 0){
                 foreach ($verificacion as $key => $val_veri) {
                     if($val_veri->disponible >= $cantidad){

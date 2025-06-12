@@ -43,7 +43,7 @@ class ExtraccionClientes extends Command
         try {
 
             //primera consulta a netsuite, consultar cantidades
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_clietes_ecomerx_galenica', 0, 1, '', 'local');
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_clientes_bi_galen', 0, 1);
             if(intval($resultado_cantidad) > 0){
 
                 $start = 0;
@@ -57,7 +57,7 @@ class ExtraccionClientes extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    $resultado = Netsuite::get(2155, null, $start, $end, '', 'local');
+                    $resultado = Netsuite::get(2169, null, $start, $end);
                     $data = json_decode($resultado, true);
                     if(isset($data['error'])){
                         $error = 1;
@@ -81,7 +81,7 @@ class ExtraccionClientes extends Command
                                 $nombre_compania            = $value["values"]["companyname"];
                                 $documento                  = $value["values"]["custentity_ks_documento"];
                                 $correo_electronico         = $value["values"]["email"];
-                                $telefono                   = $value["values"]["altphone"];
+                                $telefono                   = $value["values"]["phone"];
                                 $cupo                       = empty($value["values"]["creditlimit"]) ? 0 : $value["values"]["creditlimit"];
                                 $cupo_feria                 = empty($value["values"]["custentity_nso_cupo_feria"]) ? 0 : $value["custentity_nso_cupo_feria"]["altphone"];
                                 $categoria_id               = empty($value["values"]["category"]) ? null : $value["values"]["category"][0]["value"];

@@ -44,7 +44,7 @@ class ExtraccionDetallesInventarios extends Command
         try {
 
             //primera consulta a netsuite, consultar cantidades
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_detalle_inventario_tp_galen', 0, 1, 'InventoryBalance', 'local');
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_detalle_invt_tp_gal', 0, 1, 'InventoryBalance');
             if(intval($resultado_cantidad) > 0){
 
                 //vaciar tabla
@@ -61,7 +61,7 @@ class ExtraccionDetallesInventarios extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    $resultado = Netsuite::get(2172, null, $start, $end, '', 'local');
+                    $resultado = Netsuite::get(2181, null, $start, $end);
                     $data = json_decode($resultado, true);
                     if(isset($data['error'])){
                         $error = 1;
@@ -134,6 +134,6 @@ class ExtraccionDetallesInventarios extends Command
         }
 
         //por ultimo, generamos log
-        GenerateLogs::generateLogScheduleTask("EXTRACCION DETALLE INVENTARIO", "detalles_inventarios", $error, $cantidad_busqueda, $valores_creados, $valores_actualizados, $fecha_inicio_log, $mensaje_error);
+        GenerateLogs::generateLogScheduleTask("EXTRACCION DETALLE INVENTARIO", "detalles_inventarios", $error, $cantidad_busqueda, $cantidad_busqueda, $valores_actualizados, $fecha_inicio_log, $mensaje_error);
     }
 }

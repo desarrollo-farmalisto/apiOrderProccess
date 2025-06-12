@@ -37,7 +37,7 @@ return [
         'database' => [
             'driver' => 'database',
             'table' => 'jobs',
-            'queue' => 'default',
+            'queue' => ['tp_galenica','default'],
             'retry_after' => 90,
             'after_commit' => false,
         ],
@@ -62,11 +62,11 @@ return [
             'after_commit' => false,
         ],
 
-        'redis' => [
+        'tp_galenica_project' => [
             'driver' => 'redis',
             'connection' => 'default',
-            'queue' => env('REDIS_QUEUE', 'default'),
-            'retry_after' => 90,
+            'queue' => 'tp_galenica',
+            'retry_after' => 9000,
             'block_for' => null,
             'after_commit' => false,
         ],

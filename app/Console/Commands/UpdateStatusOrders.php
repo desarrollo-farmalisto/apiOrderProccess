@@ -42,7 +42,7 @@ class UpdateStatusOrders extends Command
         try {
 
             //primera consulta a netsuite, consultar cantidades
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch7007', 0, 1, '', 'local');
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch7007', 0, 1);
             if(intval($resultado_cantidad) > 0){
 
                 //vaciar tabla
@@ -59,7 +59,7 @@ class UpdateStatusOrders extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    $resultado = Netsuite::get(2527, null, $start, $end, '', 'local');
+                    $resultado = Netsuite::get(Netsuite::resolveId(0,2527), null, $start, $end);
                     //dd('resultado', $resultado);
                     $data = json_decode($resultado, true);
                     if(isset($data['error'])){

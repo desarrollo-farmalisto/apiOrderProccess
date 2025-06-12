@@ -8,12 +8,13 @@ use OAuthConsumer;
 use OAuthRequest;
 use OAuthSignatureMethod_HMAC_SHA256;
 use OAuthToken;
+use Illuminate\Support\Facades\Config;
 
 class Netsuite {
 
     public static function get($script, $id, $start, $end, $type = '', $type_ambiente = null)
     {
-        $ambiente = ($type_ambiente == null) ? config('app.ambiente') : $type_ambiente;
+        $ambiente =  config('app.env');
         if($ambiente == 'local'){
             $NETSUITE_DEPLOY_ID = '1';
             $NETSUITE_AMBIENTE = '4572765-sb1';
@@ -143,6 +144,13 @@ class Netsuite {
         curl_close($ch);
 
         return $response;
+    }
+
+    public static function resolveId($production, $nonProduction)
+    {
+        return config('app.env') === 'production'
+            ? $production
+            : $nonProduction;
     }
 
 }

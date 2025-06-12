@@ -61,7 +61,7 @@ class ExtraccionInventarioAxa extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    $resultado = Netsuite::get(2473, null, $start, $end, '', 'local');
+                    $resultado = Netsuite::get(Netsuite::resolveId(0,2473), null, $start, $end, '', 'local');
                     $data = json_decode($resultado, true);
                     //dd($data);
                     if(isset($data['error'])){
