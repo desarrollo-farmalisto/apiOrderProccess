@@ -89,7 +89,7 @@ class UpdateStatusOrders extends Command
                                 }else if($estado == 'Pending Receipt')
                                 {
                                     $estado = 'C';
-                                }else if($estado == 'Received ')
+                                }else if($estado == 'Received')
                                 {
                                     $estado = 'D';
                                 }
