@@ -27,7 +27,7 @@ class OrdenTrasladoController extends Controller
                 ]);
             }
             $orders = OrdenesTraslado::where('tipo_orden', $type)->with('ubicacion', 'ubicacionPara', 'ubicacionAxa')->get();
-    
+
             return response()->json([
                 'data' => $orders
             ]);
@@ -38,7 +38,7 @@ class OrdenTrasladoController extends Controller
             ]);
         }
 
-        
+
     }
 
 
@@ -61,7 +61,7 @@ class OrdenTrasladoController extends Controller
                     'centro_costo' => 1,
                     'estado' => 1
                 ];
-                // dd($insertar);  
+                // dd($insertar);
                 if ($result = OrdenesTraslado::create($insertar)) {
                     $id_orden = $result->id;
                     foreach ($productos as $producto) {
@@ -222,7 +222,7 @@ class OrdenTrasladoController extends Controller
         }
 
     }
-   
+
 // public function enviarNetsuite($id)
 //     {
 //         try {
@@ -294,7 +294,7 @@ class OrdenTrasladoController extends Controller
         $datos = DB::select("SELECT c.id, c.producto_netsuite_id, c.producto, c.ean, c.linea, c.embalaje,
             c.precio_venta, c.iva, c.precion_con_iva, c.tipo, c.es_lote, i.disponible
             FROM catalogos AS c
-            LEFT JOIN inventarios AS i ON c.producto_netsuite_id = i.producto_netsuite_id 
+            LEFT JOIN inventarios AS i ON c.producto_netsuite_id = i.producto_netsuite_id
             WHERE c.isinactive = 0 AND c.precion_con_iva > 0 AND i.id_ubicacion = $id AND c.tipo = 'Inventory Item'");
 
         $retorno = collect($datos)->map(function ($value) {
@@ -350,11 +350,26 @@ class OrdenTrasladoController extends Controller
 
     public function Productosaxa($id)
     {
-        $productoAxa = DB::select("SELECT c.id, c.producto_netsuite_id, c.producto, c.ean, c.linea, c.embalaje,
-        c.precio_venta, c.iva, c.precion_con_iva, c.tipo, c.es_lote, i.disponible
-        FROM catalogos AS c
-        LEFT JOIN inventario_axas AS i ON c.producto_netsuite_id = i.producto_netsuite_id
-        WHERE c.isinactive = 0 AND c.precion_con_iva > 0 AND i.id_ubicacion = $id AND c.tipo = 'Inventory Item'");
+        $productoAxa =  DB::select("SELECT
+                                        MIN(c.id) AS id,
+                                        c.producto_netsuite_id,
+                                        MAX(c.producto) AS producto,
+                                        MAX(c.ean) AS ean,
+                                        MAX(c.linea) AS linea,
+                                        MAX(c.embalaje) AS embalaje,
+                                        MAX(c.precio_venta) AS precio_venta,
+                                        MAX(c.iva) AS iva,
+                                        MAX(c.precion_con_iva) AS precion_con_iva,
+                                        MAX(c.tipo) AS tipo,
+                                        MAX(c.es_lote) AS es_lote,
+                                        MAX(i.disponible) AS disponible
+                                    FROM catalogos AS c
+                                        LEFT JOIN inventario_axas AS i ON c.producto_netsuite_id = i.producto_netsuite_id
+                                    WHERE c.isinactive = 0
+                                    AND c.precion_con_iva > 0
+                                    AND i.id_ubicacion =  $id
+                                    AND c.tipo = 'Inventory Item'
+                                    GROUP BY c.producto_netsuite_id;");
 
         $retornar = collect($productoAxa)->map(function ($value) {
             return [
@@ -385,12 +400,12 @@ class OrdenTrasladoController extends Controller
             if ($tipo == 'BODEGA') {
                 //dd($producto_id);
                 $ubicaciones = DB::select("
-                SELECT DISTINCT u.netsuite_id AS value, 
+                SELECT DISTINCT u.netsuite_id AS value,
                 u.nombre AS label, i.disponible
                 FROM ubicacions u
                 JOIN inventarios i ON i.id_ubicacion = u.netsuite_id
-                WHERE i.producto_netsuite_id = ? 
-                AND i.disponible > 0 
+                WHERE i.producto_netsuite_id = ?
+                AND i.disponible > 0
                 AND u.isinactive = 0
                 ", [$producto_id]);
                 ///dd($ubicaciones);
@@ -398,11 +413,11 @@ class OrdenTrasladoController extends Controller
 
             } else {
                 $ubicaciones = DB::select("
-                SELECT DISTINCT i.id_ubicacion AS value, 
+                SELECT DISTINCT i.id_ubicacion AS value,
                 i.ubicacion AS label, i.disponible
-                FROM inventario_axas i                
-                WHERE i.producto_netsuite_id = ? 
-                AND i.disponible > 0 
+                FROM inventario_axas i
+                WHERE i.producto_netsuite_id = ?
+                AND i.disponible > 0
                 ", [$producto_id]);
                 ///dd($ubicaciones);
 
@@ -439,8 +454,8 @@ class OrdenTrasladoController extends Controller
             if (is_array($productos) && count($productos) > 0) {
 
                 $productos_por_ubicacion = [];
-                
-                
+
+
                 foreach ($productos as $producto) {
                     $ubicacion = $producto['desde_ubicacion'] ?? $request->desde_ubicacion;
                     if (!isset($productos_por_ubicacion[$ubicacion])) {
@@ -448,12 +463,12 @@ class OrdenTrasladoController extends Controller
                     }
                     $productos_por_ubicacion[$ubicacion][] = $producto;
                 }
-                
+
                 $resultados = [];
                 $cantidad = count($productos_por_ubicacion);
-                
 
-                
+
+
                 foreach ($productos_por_ubicacion as $ubicacion => $productos_ubicacion) {
                     /* return response()->json([
                         'error' => true,
@@ -464,22 +479,22 @@ class OrdenTrasladoController extends Controller
                         'canal' => $request->canal,
                         'desde_compania' => $request->desde_compania,
                         'para_compania' => $request->para_compania,
-                        'desde_ubicacion' => $ubicacion, 
+                        'desde_ubicacion' => $ubicacion,
                         'para_ubicacion' => $request->para_ubicacion,
                         'empleado' => 14161,
                         'comentarios' => $request->comentarios,
                         'centro_costo' => 1,
                         'estado' => 1
                     ];
-                    
+
                     if ($result = OrdenesTraslado::create($insertar)) {
                         $id_orden = $result->id;
-                        
+
                         foreach ($productos_ubicacion as $producto) {
                             /* return response()->json([
                                 'error' => true,
                                 'mensaje' => $producto,
-                            ]); */ 
+                            ]); */
                             $detalle = [
                                 'orden_traslado_id' => $id_orden,
                                 'item_id' => $producto['producto_id'],
@@ -489,7 +504,7 @@ class OrdenTrasladoController extends Controller
                             ];
                             DetallesOrdenesTraslado::create($detalle);
                         }
-                        
+
                         $enviar_resultado = $this->enviarNetsuite($id_orden);
                         $resultados[] = [
                             'orden_id' => $id_orden,
@@ -504,10 +519,10 @@ class OrdenTrasladoController extends Controller
                         ]);
                     }
                 }
-                
+
                 // Verificar si todas las órdenes se crearon correctamente
                 $errores = array_filter($resultados, function($r) { return !$r['estado']; });
-                
+
                 if (empty($errores)) {
                     return response()->json([
                         'error' => false,

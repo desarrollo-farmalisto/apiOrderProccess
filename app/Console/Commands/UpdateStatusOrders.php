@@ -93,6 +93,10 @@ class UpdateStatusOrders extends Command
                                 {
                                     $estado = 'D';
                                 }
+                                else if($estado == "Pending Receipt/Partially Fulfilled")
+                                {
+                                    $estado = 'E';
+                                }
 
                                 $validar = OrdenesTraslado::where('numero_orden_traslado', $numero_documento)->first();
                                 if($validar)
@@ -102,7 +106,7 @@ class UpdateStatusOrders extends Command
                                     ]);
                                 }
 
-                        
+
 
                             }
 
