@@ -291,11 +291,25 @@ class OrdenTrasladoController extends Controller
 
     public function productos($id)
     {
-        $datos = DB::select("SELECT c.id, c.producto_netsuite_id, c.producto, c.ean, c.linea, c.embalaje,
-            c.precio_venta, c.iva, c.precion_con_iva, c.tipo, c.es_lote, i.disponible
-            FROM catalogos AS c
-            LEFT JOIN inventarios AS i ON c.producto_netsuite_id = i.producto_netsuite_id
-            WHERE c.isinactive = 0 AND c.precion_con_iva > 0 AND i.id_ubicacion = $id AND c.tipo = 'Inventory Item'");
+        $datos = DB::select("SELECT
+                    MIN(c.id) AS id, c.producto_netsuite_id,
+                    MAX(c.producto) AS producto,
+                    MAX(c.ean) AS ean,
+                    MAX(c.linea) AS linea,
+                    MAX(c.embalaje) AS embalaje,
+                    MAX(c.precio_venta) AS precio_venta,
+                    MAX(c.iva) AS iva,
+                    MAX(c.precion_con_iva) AS precion_con_iva,
+                    MAX(c.tipo) AS tipo, MAX(c.es_lote) AS es_lote,
+                    MAX(i.disponible) AS disponible
+                FROM catalogos AS c
+                LEFT JOIN inventarios AS i ON c.producto_netsuite_id = i.producto_netsuite_id
+                WHERE c.isinactive = 0
+                AND c.precion_con_iva > 0
+                AND i.id_ubicacion = $id
+                AND c.tipo = 'Inventory Item'
+                GROUP BY c.producto_netsuite_id;
+        ");
 
         $retorno = collect($datos)->map(function ($value) {
             return [
