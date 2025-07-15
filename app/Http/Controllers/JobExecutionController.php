@@ -12,7 +12,6 @@ class JobExecutionController extends Controller
 {
     public function SendOrder(Request $request)
     {
-        // dd("llegue");
         try {
             $jobType = $request->input('job_type');
             $jobData = $request->input('data');

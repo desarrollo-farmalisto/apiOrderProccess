@@ -18,4 +18,8 @@ class Ubicacion extends Model
         'agrupador',
         'isinactive'
     ];
+    /* public function ordenes(){
+        return $this->hasMany(OrdenesTraslado::class, 'desde_ubicacion');
+    } */
+
 }
