@@ -81,7 +81,7 @@
         </div>
         <div class="content">
             <p>Se remite el reporte en Excel con las órdenes de traslado correspondientes a la semana anterior.</p>
-            <p>Gracias por utilizar nuestro servicio.</p>
+            <p>Gracias por utilizar nuestro servicio. </p>
             <p>Si tiene alguna pregunta o requiere asistencia adicional, no dude en ponerse en contacto con nosotros.
             </p>
 
