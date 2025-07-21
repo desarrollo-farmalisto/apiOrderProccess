@@ -33,9 +33,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('ExtraccionInventarioAxa')->everyFifteenMinutes();
         $schedule->command('UpdateStatusOrders')->everyFifteenMinutes();
         $schedule->command('Actualizacion_estado_ordenes')->everyFifteenMinutes();
-
-        
-
+        $schedule->command('app:envio-ordenes')->weeklyOn(1, '8:00');
     }
 
     /**
