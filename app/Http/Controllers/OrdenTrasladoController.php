@@ -364,43 +364,31 @@ class OrdenTrasladoController extends Controller
 
     public function Productosaxa($id)
     {
-        $productoAxa =  DB::select("SELECT
-                                        MIN(c.id) AS id,
-                                        c.producto_netsuite_id,
-                                        MAX(c.producto) AS producto,
-                                        MAX(c.ean) AS ean,
-                                        MAX(c.linea) AS linea,
-                                        MAX(c.embalaje) AS embalaje,
-                                        MAX(c.precio_venta) AS precio_venta,
-                                        MAX(c.iva) AS iva,
-                                        MAX(c.precion_con_iva) AS precion_con_iva,
-                                        MAX(c.tipo) AS tipo,
-                                        MAX(c.es_lote) AS es_lote,
-                                        MAX(i.disponible) AS disponible
-                                    FROM catalogos AS c
-                                        LEFT JOIN inventario_axas AS i ON c.producto_netsuite_id = i.producto_netsuite_id
-                                    WHERE c.isinactive = 0
-                                    AND c.precion_con_iva > 0
-                                    AND i.id_ubicacion =  $id
-                                    AND c.tipo = 'Inventory Item'
-                                    GROUP BY c.producto_netsuite_id;");
-
+       $productoAxa =  DB::select("SELECT
+                                    i.producto_netsuite_id ,
+                                    i.producto ,
+                                    i.ean,
+                                    i.disponible
+                                    
+                                 FROM  inventario_axas i
+                                    WHERE i.id_ubicacion =  $id;");
+    
         $retornar = collect($productoAxa)->map(function ($value) {
             return [
-                'id' => $value->id,
+               'id' => $value->producto_netsuite_id,
                 'product_id' => $value->producto_netsuite_id,
                 'producto' => $value->producto,
                 'ean' => $value->ean,
-                'linea' => $value->linea,
-                'embalaje' => $value->embalaje,
-                'tipo' => $value->tipo,
-                'es_lote' => $value->es_lote,
+               // 'linea' => $value->linea,
+               // //'embalaje' => $value->embalaje,
+               // 'tipo' => $value->tipo,
+               // 'es_lote' => $value->es_lote,
                 'inventario' => $value->disponible ?? 0,
-                'precio_unitario' => "$" . number_format($value->precio_venta, 0, ",", "."),
-                'precio_unitario_calculable' => $value->precio_venta,
-                'iva' => $value->iva,
-                'precio' => "$" . number_format($value->precion_con_iva, 0, ",", "."),
-                'precio_calculable' => $value->precion_con_iva
+               // 'precio_unitario' => "$" . number_format($value->precio_venta, 0, ",", "."),
+               // 'precio_unitario_calculable' => $value->precio_venta,
+              //  'iva' => $value->iva,
+              //  'precio' => "$" . number_format($value->precion_con_iva, 0, ",", "."),
+               'precio_calculable' => 0
             ];
         });
 

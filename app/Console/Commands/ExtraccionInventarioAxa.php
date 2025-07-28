@@ -39,11 +39,12 @@ class ExtraccionInventarioAxa extends Command
         $valores_actualizados = 0;
         $valores_creados = 0;
         $cantidad_busqueda = 0;
-
+dump(22);
         try {
 
             //primera consulta a netsuite, consultar cantidades
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_invent_galenica_t_2', 0, 1, '', 'local');
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_invent_galenica_t_2', 0, 1);
+        dump( $resultado_cantidad);
             //dd($resultado_cantidad);
             if(intval($resultado_cantidad) > 0){
 
@@ -115,6 +116,7 @@ class ExtraccionInventarioAxa extends Command
             }
 
         } catch (\Throwable $e) {
+        dump($e);
             $error = 1;
             $mensaje_error = $e;
         }

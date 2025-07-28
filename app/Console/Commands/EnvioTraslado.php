@@ -63,8 +63,8 @@ class EnvioTraslado extends Command
                 Mail::send('exports.ordenes', 
                     ['fechaInicio' => $fechaInicio, 'fechaFin' => $fechaFin], 
                     function ($message) use ($nombreArchivo, $adjunto, $fechaInicio, $fechaFin) {
-                        $message->to(['auxiliar.desarrollo@axa.com.co', 'katherine.rincon@axa.com.co', 'asistente2.abastecimiento@axa.com.co',
-                        'alvaro@axa.com.co', 'jorge.pinto@axa.com.co'])
+                        $message->to([ 'katherine.rincon@axa.com.co', 'asistente2.abastecimiento@axa.com.co',
+                        'alvaro@axa.com.co', 'jorge.pinto@axa.com.co','diego.agudelo@axa.com.co','jose.bustos@axa.com.co'])
                             ->subject('Reporte semanal de órdenes: ' . $fechaInicio . ' al ' . $fechaFin)
                             ->attach($adjunto);
                     }

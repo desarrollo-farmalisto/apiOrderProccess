@@ -32,7 +32,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('extraccion:catalogo-abbott')->daily();
         $schedule->command('ExtraccionInventarioAxa')->everyFifteenMinutes();
         $schedule->command('UpdateStatusOrders')->everyFifteenMinutes();
-        $schedule->command('Actualizacion_estado_ordenes')->everyFifteenMinutes();
+        $schedule->command('Actualizacion_estado_ordenes')->cron('*/3 * * * *');
         $schedule->command('app:envio-ordenes')->weeklyOn(1, '8:00');
     }
 
