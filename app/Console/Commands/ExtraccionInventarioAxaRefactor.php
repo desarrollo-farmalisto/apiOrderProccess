@@ -6,6 +6,7 @@ use App\Models\InventarioAxa;
 use App\Services\Netsuite;
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class ExtraccionInventarioAxaRefactor extends Command
 {
@@ -18,7 +19,8 @@ class ExtraccionInventarioAxaRefactor extends Command
             $start = 0;
             $end = 1000;
             $data = [];
-
+            
+            DB::table('inventario_axas')->truncate();
             do {
                 $start = str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
                 dump($start, $end);
@@ -30,10 +32,11 @@ class ExtraccionInventarioAxaRefactor extends Command
                     throw new Exception("Error en estraccion de inventario axa", 1);
                 }
 
+                $data = $data['response'];
                 $start += 1000;
                 $end += 1000;
-
-                foreach ($data['response'] as $key => $value) {
+                $array_insertar = [];
+                foreach ($data as $key => $value) {
                     $es_producto_numerado_por_lote      = $value["values"]["islotitem"];
                     $array_insertar[] = [
                         'producto_netsuite_id' =>               $value["values"]["internalid"][0]["text"],
