@@ -365,7 +365,7 @@ class OrdenTrasladoController extends Controller
     public function Productosaxa($id)
     {
        $productoAxa =  DB::select("SELECT
-                                    i.producto_netsuite_id ,
+                                    DISTINCT i.producto_netsuite_id ,
                                     i.producto ,
                                     i.ean,
                                     i.disponible
