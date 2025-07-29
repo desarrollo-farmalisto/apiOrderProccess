@@ -15,7 +15,7 @@ class ExtraccionInventarioAxa extends Command
      *
      * @var string
      */
-    protected $signature = 'extraccion:inventarioAxa';
+    protected $signature = 'extraccion:inventarioAxa-old';
 
     /**
      * The console command description.
