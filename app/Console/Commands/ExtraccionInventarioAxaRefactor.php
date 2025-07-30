@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\InventarioAxa;
+use App\Models\InventarioAxaTmp;
 use App\Services\Netsuite;
 use Exception;
 use Illuminate\Console\Command;
@@ -19,8 +19,8 @@ class ExtraccionInventarioAxaRefactor extends Command
             $start = 0;
             $end = 1000;
             $data = [];
-            
-            DB::table('inventario_axas')->truncate();
+            DB::table('inventario_axa_tmp')->truncate();
+
             do {
                 $start = str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
                 dump($start, $end);
@@ -51,10 +51,36 @@ class ExtraccionInventarioAxaRefactor extends Command
                 }
                 $count = count($array_insertar);
                 if ($count > 0) {
-                    InventarioAxa::insert($array_insertar);
+                    InventarioAxaTmp::insert($array_insertar);
                     dump('Insert: ' . $count);
                 }
             } while ($data);
+
+            DB::table('inventario_axas')->truncate();
+            DB::statement("
+            INSERT INTO inventario_axas (
+                producto_netsuite_id,
+                producto,
+                ean,
+                id_ubicacion,
+                ubicacion,
+                disponible,
+                es_producto_numerado_por_lote,
+                created_at,
+                updated_at
+            )
+            SELECT 
+                producto_netsuite_id,
+                producto,
+                ean,
+                id_ubicacion,
+                ubicacion,
+                disponible,
+                es_producto_numerado_por_lote,
+                created_at,
+                updated_at
+            FROM inventario_axa_tmp
+        ");
         } catch (\Throwable $e) {
             dump($e->getMessage());
         }
