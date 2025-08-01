@@ -11,12 +11,11 @@ use App\Services\Netsuite;
 use Illuminate\Support\Facades\DB;
 use App\Models\Ubicacion;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 
 class OrdenTrasladoController extends Controller
 {
-     public function index($type = null)
+    public function index($type = null)
     {
 
         try {
@@ -34,11 +33,9 @@ class OrdenTrasladoController extends Controller
         } catch (\Throwable $th) {
             return response()->json([
                 'data' => $th->getMessage(),
-            	'type' => $type,
+                'type' => $type,
             ]);
         }
-
-
     }
 
 
@@ -61,7 +58,7 @@ class OrdenTrasladoController extends Controller
                     'centro_costo' => 1,
                     'estado' => 1
                 ];
-                // dd($insertar);
+
                 if ($result = OrdenesTraslado::create($insertar)) {
                     $id_orden = $result->id;
                     foreach ($productos as $producto) {
@@ -76,6 +73,10 @@ class OrdenTrasladoController extends Controller
                     }
 
                     $enviar_resultado = $this->enviarNetsuite($id_orden);
+                    
+                    Log::info('netsuite');
+                    Log::info($enviar_resultado);
+
                     if ($enviar_resultado['estado']) {
                         return response()->json([
                             'error' => false,
@@ -101,6 +102,7 @@ class OrdenTrasladoController extends Controller
                 ]);
             }
         } catch (\Throwable $th) {
+            Log::error("error ordenes de traslado: " . $th->getMessage());
             return response()->json([
                 'error' => true,
                 'mensaje' => $th->getMessage(),
@@ -115,7 +117,7 @@ class OrdenTrasladoController extends Controller
 
         //items
         $items = array();
-        if(count($traslado->detalles) > 0){
+        if (count($traslado->detalles) > 0) {
             foreach ($traslado->detalles as $key => $value) {
                 $items[] = array(
                     "id" => $value->item_id,
@@ -142,24 +144,26 @@ class OrdenTrasladoController extends Controller
         //$resultado_service = Netsuite::post(2140, $json, 'local');
         $resultado_service = Netsuite::post(2159, $json);
         $decodificado = json_decode($resultado_service, true);
-        if($decodificado["message"] == 'success'){
+        if ($decodificado["message"] == 'success') {
 
             $id_netsuite = $decodificado["response"]["id"];
-            $num_orden = null; $estado_ns = null; $items = null;
+            $num_orden = null;
+            $estado_ns = null;
+            $items = null;
 
             //consultar informacion del traslado
             //$resultado_consulta = Netsuite::get(2141, $id_netsuite, 0, 1, '', 'local');
             $resultado_consulta = Netsuite::get(2160, $id_netsuite, 0, 1);
             $decodificado_consulta = json_decode($resultado_consulta, true);
-            if($decodificado_consulta["message"] == 'success'){
+            if ($decodificado_consulta["message"] == 'success') {
                 $num_orden = $decodificado_consulta["response"]["num"];
                 $estado_ns = $decodificado_consulta["response"]["estado"];
                 $items = $decodificado_consulta["response"]["items"];
             }
 
             //validando los items
-            if($items != null){
-                if(count($items) > 0){
+            if ($items != null) {
+                if (count($items) > 0) {
                     foreach ($items as $key => $value) {
                         $act_items = array(
                             'cantidad_recibido' => $value["recibido"]
@@ -180,7 +184,7 @@ class OrdenTrasladoController extends Controller
             OrdenesTraslado::findOrFail($traslado->id)->update($actualizar);
 
             //generar log
-            $mensaje = 'CREACION ORDEN TRASLADO #'. $traslado->id . ', Mensaje: Orden de Traslado creada correctamente, generado con el ID NETSUITE #' . $id_netsuite . ' y NUMERO ORDEN #' . $num_orden;
+            $mensaje = 'CREACION ORDEN TRASLADO #' . $traslado->id . ', Mensaje: Orden de Traslado creada correctamente, generado con el ID NETSUITE #' . $id_netsuite . ' y NUMERO ORDEN #' . $num_orden;
             $agg_info = array(
                 'tipo' => 'ORDEN TRASLADO',
                 'respuesta_id' => $traslado->id,
@@ -194,7 +198,6 @@ class OrdenTrasladoController extends Controller
                 'mensaje' => 'Se creo la orden netsuite con exito',
             );
             return $response;
-
         } else {
 
             $actualizar = array(
@@ -203,7 +206,7 @@ class OrdenTrasladoController extends Controller
             OrdenesTraslado::findOrFail($traslado->id)->update($actualizar);
 
             //generar log
-            $mensaje = 'ERROR CREACION ORDEN TRASLADO #'. $traslado->id . ', Mensaje: ' .$decodificado["response"];
+            $mensaje = 'ERROR CREACION ORDEN TRASLADO #' . $traslado->id . ', Mensaje: ' . $decodificado["response"];
             $agg_info = array(
                 'tipo' => 'ORDEN TRASLADO',
                 'respuesta_id' => $traslado->id,
@@ -218,76 +221,8 @@ class OrdenTrasladoController extends Controller
                 'mensaje' => 'Error al crear orden de traslado',
             );
             return $response;
-
         }
-
     }
-
-// public function enviarNetsuite($id)
-//     {
-//         try {
-//             // dd($id);
-//             $traslado = OrdenesTraslado::find($id);
-//             $items = [];
-
-//             if (count($traslado->detalles) > 0) {
-//                 foreach ($traslado->detalles as $value) {
-//                     $items[] = [
-//                         "id" => $value->item_id,
-//                         "cantidad" => $value->cantidad_solicitado
-//                     ];
-//                 }
-//             }
-
-//             $array_json = [
-//                 "tipo_orden" => $traslado->tipo_orden,
-//                 "desde_compania" => ($traslado->desde_compania == "ECOMERX/GALENICA") ? 8 : 6,
-//                 "para_compania" => 8,
-//                 "desde_ubicacion" => $traslado->desde_ubicacion,
-//                 "para_ubicacion" => $traslado->para_ubicacion,
-//                 "empleado" => $traslado->empleado,
-//                 "comentarios" => $traslado->comentarios,
-//                 "centro_costo" => $traslado->centro_costo,
-//                 "estado" => "A", //Helper::getEstadoOrdenes($traslado->estado),
-//                 "items" => $items
-//             ];
-
-//             $json = json_encode($array_json);
-//             $resultado_service = Netsuite::post(2159, $json);
-//             $decodificado = json_decode($resultado_service, true);
-//             // dd($decodificado);
-//             // Verificar si decodificado es un array y tiene la clave "message"
-//             if (is_array($decodificado) && isset($decodificado["message"]) && $decodificado["message"] == 'success') {
-//                 // ... resto del código existente ...
-//             } else {
-//                 $actualizar = ['estado' => 3];
-//                 OrdenesTraslado::findOrFail($traslado->id)->update($actualizar);
-
-//                 // Construir un mensaje de error seguro
-//                 $mensaje = 'Error al crear orden de traslado #' . $traslado->id . '. ';
-//                 if (is_array($decodificado) && isset($decodificado["response"])) {
-//                     $mensaje .= 'Mensaje: ' . (is_string($decodificado["response"]) ? $decodificado["response"] : json_encode($decodificado["response"]));
-//                 } else {
-//                     $mensaje .= 'No se pudo procesar la respuesta de Netsuite.';
-//                 }
-
-//                 LogsNetsuites::create([
-//                     'tipo' => 'ORDEN TRASLADO',
-//                     'respuesta_id' => $traslado->id,
-//                     'fecha' => now()->toDateString(),
-//                     'error' => 'Sí',
-//                     'mensaje' => $mensaje
-//                 ]);
-
-//                 return ['estado' => false, 'mensaje' => $mensaje];
-//             }
-//         } catch (\Throwable $th) {
-//             return response()->json([
-//                 'estado' => false,
-//                 'mensaje' => $th->getMessage(),
-//             ]);
-//         }
-//     }
 
     public function productos($id)
     {
@@ -364,31 +299,31 @@ class OrdenTrasladoController extends Controller
 
     public function Productosaxa($id)
     {
-       $productoAxa =  DB::select("SELECT
+        $productoAxa =  DB::select("SELECT
                                     DISTINCT i.producto_netsuite_id ,
                                     i.producto ,
                                     i.ean,
                                     i.disponible
-                                    
+
                                  FROM  inventario_axas i
                                     WHERE i.id_ubicacion =  $id;");
-    
+
         $retornar = collect($productoAxa)->map(function ($value) {
             return [
-               'id' => $value->producto_netsuite_id,
+                'id' => $value->producto_netsuite_id,
                 'product_id' => $value->producto_netsuite_id,
                 'producto' => $value->producto,
                 'ean' => $value->ean,
-               // 'linea' => $value->linea,
-               // //'embalaje' => $value->embalaje,
-               // 'tipo' => $value->tipo,
-               // 'es_lote' => $value->es_lote,
+                // 'linea' => $value->linea,
+                // //'embalaje' => $value->embalaje,
+                // 'tipo' => $value->tipo,
+                // 'es_lote' => $value->es_lote,
                 'inventario' => $value->disponible ?? 0,
-               // 'precio_unitario' => "$" . number_format($value->precio_venta, 0, ",", "."),
-               // 'precio_unitario_calculable' => $value->precio_venta,
-              //  'iva' => $value->iva,
-              //  'precio' => "$" . number_format($value->precion_con_iva, 0, ",", "."),
-               'precio_calculable' => 0
+                // 'precio_unitario' => "$" . number_format($value->precio_venta, 0, ",", "."),
+                // 'precio_unitario_calculable' => $value->precio_venta,
+                //  'iva' => $value->iva,
+                //  'precio' => "$" . number_format($value->precion_con_iva, 0, ",", "."),
+                'precio_calculable' => 0
             ];
         });
 
@@ -523,7 +458,9 @@ class OrdenTrasladoController extends Controller
                 }
 
                 // Verificar si todas las órdenes se crearon correctamente
-                $errores = array_filter($resultados, function($r) { return !$r['estado']; });
+                $errores = array_filter($resultados, function ($r) {
+                    return !$r['estado'];
+                });
 
                 if (empty($errores)) {
                     return response()->json([
@@ -548,7 +485,7 @@ class OrdenTrasladoController extends Controller
             return response()->json([
                 'error' => true,
                 'mensaje' => $th->getMessage(),
-                'linea' =>$th->getLine(),
+                'linea' => $th->getLine(),
             ]);
         }
     }
