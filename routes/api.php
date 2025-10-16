@@ -140,8 +140,8 @@ Route::middleware('auth:sanctum')->group(function() {
      //ordenes traslado
    Route::controller(OrdenTrasladoController::class)
    ->prefix('/ordenes/traslados')->group(function () {
-    //    Route::post('/guardar', 'guardar');
-    //    Route::post('/guardarPedido', 'guardarPedido');
+       Route::post('/guardar', 'guardar');
+       Route::post('/guardarPedido', 'guardarPedido');
        Route::get('/index/{type?}','index');
        Route::get('/indexIntercompany/{type?}','indexIntercompany');
        Route::get('/productos/{id}', 'productos');
