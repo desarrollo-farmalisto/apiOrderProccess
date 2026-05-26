@@ -126,6 +126,12 @@ class OrdenTrasladoController extends Controller
             }
         }
 
+        // Vendedor 
+        $socio = null;
+        if(auth()->user()){
+            $socio = auth()->user()->name;
+        }
+
         //crear json
         $array_json = array(
             "tipo_orden" => $traslado->tipo_orden,
@@ -134,7 +140,7 @@ class OrdenTrasladoController extends Controller
             "desde_ubicacion" => $traslado->desde_ubicacion,
             "para_ubicacion" => $traslado->para_ubicacion,
             "empleado" => $traslado->empleado,
-            "comentarios" => $traslado->comentarios,
+            "comentarios" => $traslado->comentarios . " " . $socio,
             "centro_costo" => $traslado->centro_costo,
             "estado" => "A",
             "items" => $items
