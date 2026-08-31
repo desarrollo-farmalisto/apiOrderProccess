@@ -102,6 +102,7 @@ class ExtraccionKits extends Command
                                         'cantidad_kit' => $cantidad_kit,
                                         'cantidad_regular' => $cantidad_regular,
                                         'cantidad_regalo' => $cantidad_regalo,
+                                        'isinactive' => $isinactive,
                                         'updated_at' => Date('Y-m-d\TH:i:s')
                                     );
                                     $valores_actualizados++;
@@ -117,6 +118,7 @@ class ExtraccionKits extends Command
                                         'cantidad_kit' => $cantidad_kit,
                                         'cantidad_regular' => $cantidad_regular,
                                         'cantidad_regalo' => $cantidad_regalo,
+                                        'isinactive' => $isinactive,
                                         'created_at' => Date('Y-m-d\TH:i:s')
                                     );
                                     $valores_creados++;

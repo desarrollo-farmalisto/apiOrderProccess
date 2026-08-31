@@ -9,6 +9,7 @@ use OAuthRequest;
 use OAuthSignatureMethod_HMAC_SHA256;
 use OAuthToken;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 
 class Netsuite {
 
@@ -60,6 +61,8 @@ class Netsuite {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             $req->to_header().',realm="'.$NETSUITE_ACCOUNT.'',
             'Content-Type: application/json',
@@ -68,6 +71,8 @@ class Netsuite {
         ]);
 
         $respuesta = curl_exec($ch);
+        $curl_error = curl_error($ch);
+        $curl_info = curl_getinfo($ch);
         curl_close($ch);
 
         return $respuesta;

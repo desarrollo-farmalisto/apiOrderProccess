@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Helper\Helper;
 use App\Models\InventarioNetsuite;
 use App\Services\GenerateLogs;
 use App\Services\Netsuite;

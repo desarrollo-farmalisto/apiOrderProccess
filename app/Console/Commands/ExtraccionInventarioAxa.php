@@ -5,8 +5,10 @@ namespace App\Console\Commands;
 use App\Models\InventarioAxa;
 use App\Services\GenerateLogs;
 use App\Services\Netsuite;
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ExtraccionInventarioAxa extends Command
 {
@@ -15,7 +17,7 @@ class ExtraccionInventarioAxa extends Command
      *
      * @var string
      */
-    protected $signature = 'extraccion:inventarioAxa-old';
+    protected $signature = 'extraccion:inventarioAxa';
 
     /**
      * The console command description.
@@ -34,21 +36,16 @@ class ExtraccionInventarioAxa extends Command
         $error = 0;
         $mensaje_error = '';
 
-        //establecer variables
         $fecha_inicio_log = Date('Y-m-d\TH:i:s');
         $valores_actualizados = 0;
         $valores_creados = 0;
         $cantidad_busqueda = 0;
-dump(22);
+
         try {
 
-            //primera consulta a netsuite, consultar cantidades
             $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_invent_galenica_t_2', 0, 1);
-        dump( $resultado_cantidad);
-            //dd($resultado_cantidad);
             if(intval($resultado_cantidad) > 0){
 
-                //vaciar tabla
                 DB::table('inventario_axas')->truncate();
 
                 $start = 0;
@@ -58,13 +55,12 @@ dump(22);
                 $cantidad_dividir = intval($cantidad_for / 1000);
                 for ($i=0; $i < $cantidad_dividir ; $i++) {
 
-                    $start = ($i == 0) ? 0 : $start + 1000;
-                    $end = $end + 1000;
-                    $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
+                    $start = $i * 1000;
+                    $end = $start + 1000;
 
-                    $resultado = Netsuite::get(Netsuite::resolveId(2517,2473), null, $start, $end, '', 'local');
+                    $resultado = Netsuite::get(2097, 'customsearch_ecomerx_invent_galenica_t_2', $start, $end);
                     $data = json_decode($resultado, true);
-                    //dd($data);
+
                     if(isset($data['error'])){
                         $error = 1;
                         $mensaje_error = json_encode($data);
@@ -77,7 +73,6 @@ dump(22);
                             $cantidad_busqueda = $cantidad_busqueda + count($data["response"]);
                             $array_insertar = array();
 
-                            //recorrer datos
                             foreach ($data["response"] as $key => $value) {
         
                                 $producto_netsuite_id               = $value["values"]["internalid"][0]["text"];
@@ -102,8 +97,6 @@ dump(22);
                                 );
 
                             }
-
-                            //insertar en la tabla
                             InventarioAxa::insert($array_insertar);
 
                         }
@@ -115,13 +108,10 @@ dump(22);
                 $mensaje_error = 'Se presento un error al consultar la busqueda! No se pudo extraer nada.';
             }
 
-        } catch (\Throwable $e) {
-        dump($e);
-            $error = 1;
-            $mensaje_error = $e;
+        } catch (Exception $e) {
+            Log::info("Error: ". $e->getMessage());
         }
 
-        //por ultimo, generamos log
         GenerateLogs::generateLogScheduleTask("EXTRACCION INVENTARIO AXA", "inventario axa", $error, $cantidad_busqueda, $valores_creados, $valores_actualizados, $fecha_inicio_log, $mensaje_error);
     }
 }

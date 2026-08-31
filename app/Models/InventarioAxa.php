@@ -9,6 +9,7 @@ class InventarioAxa extends Model
 {
     use HasFactory;
 
+    protected $table = 'inventario_axas';
     protected $fillable = [
         'producto_netsuite_id',
         'producto',

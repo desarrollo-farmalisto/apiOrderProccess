@@ -45,7 +45,8 @@ class Handler extends ExceptionHandler
     {
         //$this->reportable(function (Throwable $e) {});
         $this->renderable(function (Throwable $e) {
-            return response(['error' => $e->getMessage(), 'code' => $e->getCode()], $e->getCode() ?: 400);
+            $httpCode = ($e->getCode() >= 100 && $e->getCode() <= 599) ? $e->getCode() : 500;
+            return response(['error' => $e->getMessage(), 'code' => $e->getCode()], $httpCode);
         });
     }
 }

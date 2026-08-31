@@ -21,7 +21,7 @@ class ExtraccionDireccionesClientes extends Command
      *
      * @var string
      */
-    protected $description = 'Extracción de la información de las direcciones para los clientes de Galenica, desde el ERP Netsuite. Esta tarea se ejecuta cada 1hora en horario laboral.';
+    protected $description = 'Extracción de la información de las direcciones para los clientes de Farmalisto, desde el ERP Netsuite. Esta tarea se ejecuta cada 1hora en horario laboral.';
 
     /**
      * Execute the console command.

@@ -6,7 +6,6 @@ use App\Models\Cliente;
 use App\Services\GenerateLogs;
 use App\Services\Netsuite;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 class ExtraccionClientes extends Command
 {
@@ -122,7 +121,7 @@ class ExtraccionClientes extends Command
 
                                     //crea
                                     $array_crear[] = array(
-                                        'netsuite_id' => $netsuite_id,
+                                        'netsuite_id' => (int)$netsuite_id,
                                         'tipo' => $tipo,
                                         'nombre' => $nombre,
                                         'nombre_compania' => $nombre_compania,
@@ -162,7 +161,6 @@ class ExtraccionClientes extends Command
                     }
 
                 }
-
             } else {
                 $error = 1;
                 $mensaje_error = 'Se presento un error al consultar la busqueda! No se pudo extraer nada.';

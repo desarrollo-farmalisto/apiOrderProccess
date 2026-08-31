@@ -30,6 +30,7 @@ class ExtraccionCatalogo extends Command
      */
     public function handle()
     {
+        set_time_limit(0);
         $error = 0;
         $mensaje_error = '';
 
@@ -71,6 +72,14 @@ class ExtraccionCatalogo extends Command
                             $array_crear = array();
                             $array_actualizar = array();
 
+                            $ids_batch = array_column($data["response"], 'id');
+                            $existentes = Catalogo::select('producto_netsuite_id', 'lista_precio_id')
+                                ->whereIn('producto_netsuite_id', $ids_batch)
+                                ->get()
+                                ->map(fn($r) => $r->producto_netsuite_id . '_' . $r->lista_precio_id)
+                                ->flip()
+                                ->all();
+
                             //recorrer datos
                             foreach ($data["response"] as $key => $value) {
 
@@ -84,8 +93,8 @@ class ExtraccionCatalogo extends Command
                                 $tasa_iva                           = empty($value["values"]["taxschedule"]) ? null : $value["values"]["taxschedule"][0]["text"];
                                 $iva                                = empty($value["values"]["custitem_ks_tarifa_de_iva"]) ? 0 : $value["values"]["custitem_ks_tarifa_de_iva"][0]["text"];
                                 $precion_con_iva                    = empty($value["values"]["formulanumeric"]) ? 0 : $value["values"]["formulanumeric"];
-                                $cantidad_maxima                    = 0;//empty($value["values"]["pricing.maximumquantity"]) ? 0 : $value["values"]["pricing.maximumquantity"];
-                                $cantidad_minima                    = 0;//empty($value["values"]["pricing.minimumquantity"]) ? 0 : $value["values"]["pricing.minimumquantity"];
+                                $cantidad_maxima                    = 0;
+                                $cantidad_minima                    = 0;
                                 $embalaje                           = empty($value["values"]["custitem_nso_axa_field_item_fromalm"]) ? 0 : $value["values"]["custitem_nso_axa_field_item_fromalm"];
                                 $es_lote                            = $value["values"]["islotitem"];
                                 $es_controlado                      = $value["values"]["custitem_nso_axa_field_item_medcont"];
@@ -97,11 +106,8 @@ class ExtraccionCatalogo extends Command
                                 $es_controlado = ($es_controlado == false) ? 0 : 1;
                                 $isinactive = ($isinactive == false) ? 0 : 1;
 
-                                $sql_validar = Catalogo::select('id')->where([
-                                    ['producto_netsuite_id', '=', $producto_netsuite_id],
-                                    ['lista_precio_id', '=', $lista_precio_id]
-                                ])->get();
-                                if(count($sql_validar) > 0){
+                                $clave = $producto_netsuite_id . '_' . $lista_precio_id;
+                                if(isset($existentes[$clave])){
                                     $array_actualizar[] = array(
                                         'producto_netsuite_id' => $producto_netsuite_id,
                                         'producto' => $producto,
@@ -170,7 +176,7 @@ class ExtraccionCatalogo extends Command
 
         } catch (\Throwable $e) {
             $error = 1;
-            $mensaje_error = $e;
+            $mensaje_error = $e->getMessage();
         }
 
         //por ultimo, generamos log

@@ -3,18 +3,17 @@
 namespace App\Jobs;
 
 use App\Models\Catalogo;
+use App\Models\Categoria;
 use App\Models\DetallesInventarios;
 use App\Models\Kit;
 use App\Models\LogsNetsuites;
 use App\Models\Pedidos;
 use App\Services\Netsuite;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
 
 class SendOrder implements ShouldQueue
 {
@@ -45,6 +44,29 @@ class SendOrder implements ShouldQueue
     private function send($id)
     {
         $pedido = Pedidos::findOrFail($id);
+
+        $clase = 1707;
+        $cliente = $pedido->cliente;
+
+        if ($cliente && str_starts_with(strtolower($cliente->categoria ?? ''), 'farmalisto')) {
+            $categoria = Categoria::where('categoria', $cliente->categoria)->first();
+            $claseComercial = $categoria?->clasesComerciales->first()?->clase_comercial ?? null;
+
+            if (!$claseComercial) {
+                $pedido->estado = 5;
+                $pedido->save();
+
+                LogsNetsuites::create([
+                    'tipo' => 'FACTURA',
+                    'respuesta_id' => $pedido->id,
+                    'fecha' => now()->format('Y-m-d'),
+                    'error' => 'Si',
+                    'mensaje' => "ERROR CREACION FACTURA FARMALISTO #{$pedido->id}, Mensaje: No se encontró una clase comercial asociada a la categoría del cliente.",
+                ]);
+                return;
+            }
+            $clase = $claseComercial;
+        }
 
         //agregar los items
         $items = array();
@@ -136,7 +158,7 @@ class SendOrder implements ShouldQueue
             "comentarios" => $pedido->nota,
             "numero_pedido" => $pedido->id,
             "metodo_pago" => $pedido->metodo_pago,
-            "clase" => 1707, // ECOMERX SAS : GALENICA
+            "clase" => $clase, // ECOMERX SAS : GALENICA
             "ubicacion" => $pedido->ubicacion_id,
             "vendedor_id" => ($pedido->usuario) ? $pedido->usuario->netsuite_id : null,
             "medio_pago" => $pedido->medio_pago_id,
