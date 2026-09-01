@@ -22,8 +22,8 @@ class ClasesComercialesSeeder extends Seeder
             '11040305 Market Place ML Farmalisto'
         ];
 
-        foreach ($clase as $clase) {
-            ClaseComercial::updateOrInsert(['clase_comercial' => $clase, 'created_at' => now(), 'updated_at' => now()]);
+        foreach ($clase as $nombre) {
+            ClaseComercial::updateOrInsert(['clase_comercial' => $nombre], ['created_at' => now(), 'updated_at' => now()]);
         }
     }
 }

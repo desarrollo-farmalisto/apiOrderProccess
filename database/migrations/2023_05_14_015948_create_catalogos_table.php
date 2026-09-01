@@ -22,10 +22,10 @@ return new class extends Migration
             $table->string('tipo');
             $table->bigInteger('lista_precio_id');
             $table->string('linea')->nullable();
-            $table->float('precio_venta')->default(0);
+            $table->decimal('precio_venta', 15, 2)->default(0);
             $table->string('tasa_iva');
             $table->integer('iva')->default(0);
-            $table->float('precion_con_iva')->default(0);
+            $table->decimal('precion_con_iva', 15, 2)->default(0);
             $table->integer('cantidad_maxima')->default(0);
             $table->integer('cantidad_minima')->default(0);
             $table->integer('embalaje')->default(0);

@@ -62,6 +62,16 @@ return [
             'after_commit' => false,
         ],
 
+        // LOCAL
+        // 'tp_galenica_project' => [
+        //     'driver' => 'database',
+        //     'table' => 'jobs',
+        //     'queue' => 'tp_galenica',
+        //     'retry_after' => 9000,
+        //     'after_commit' => false,
+        // ],
+
+        // PRODUCCIÓN
         'tp_galenica_project' => [
             'driver' => 'redis',
             'connection' => 'default',

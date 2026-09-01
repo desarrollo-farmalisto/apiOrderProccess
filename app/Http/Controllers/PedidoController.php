@@ -172,12 +172,8 @@ class PedidoController extends Controller
                         DetallesPedidos::create($array_detalle);
 
                         $product = Catalogo::where('producto_netsuite_id', intval($item["producto_id"]))->first();
-                        
+                        $exist = $product && ProductoIntegracion::where('producto_id', $product->id)->exists();
 
-                        
-                        $exist = ProductoIntegracion::where('producto_id', $product->id)->exists();
-                        
-                        
                         if ($exist) {
                             $array_product_abbott[] = [
                                 'ean' => $item["ean"],
@@ -711,7 +707,7 @@ class PedidoController extends Controller
                 foreach($detallesPedido as $detallePedido){
                     
                     $product = Catalogo::where('producto_netsuite_id', intval($detallePedido->producto_netsuite_id))->first();
-                    $exist = ProductoIntegracion::where('producto_id', $product->id)->exists();
+                    $exist = $product && ProductoIntegracion::where('producto_id', $product->id)->exists();
                     
                     if ($exist) {
                         $array_product_abbott[] = [

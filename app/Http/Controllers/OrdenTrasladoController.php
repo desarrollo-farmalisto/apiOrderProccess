@@ -248,7 +248,7 @@ class OrdenTrasladoController extends Controller
                 WHERE c.isinactive = 0
                 AND c.precion_con_iva > 0
                 AND i.id_ubicacion = $id
-                AND c.tipo = 'Inventory Item'
+                AND c.tipo LIKE '%nventario%'
                 GROUP BY c.producto_netsuite_id;
         ");
 

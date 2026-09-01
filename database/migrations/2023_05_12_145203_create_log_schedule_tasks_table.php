@@ -26,7 +26,7 @@ return new class extends Migration
             $table->dateTime('fecha_inicio');
             $table->dateTime('fecha_fin');
             $table->string('tiempo')->nullable();
-            $table->text('mensaje_error')->nullable();
+            $table->longText('mensaje_error')->nullable();
 
             $table->timestamps();
         });

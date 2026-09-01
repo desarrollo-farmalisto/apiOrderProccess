@@ -60,7 +60,6 @@ class UpdateStatusOrders extends Command
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
                     $resultado = Netsuite::get(Netsuite::resolveId(2518,2527), null, $start, $end);
-                    //dd('resultado', $resultado);
                     $data = json_decode($resultado, true);
                     if(isset($data['error'])){
                         $error = 1;
@@ -105,11 +104,7 @@ class UpdateStatusOrders extends Command
                                         'estado_netsuite' => $estado,
                                     ]);
                                 }
-
-
-
                             }
-
                         }
                     }
                 }
@@ -121,8 +116,9 @@ class UpdateStatusOrders extends Command
 
         } catch (\Throwable $e) {
             $error = 1;
-            $mensaje_error = $e;
+            $mensaje_error = $e->getMessage();
         }
 
+        \App\Services\GenerateLogs::generateLogScheduleTask("ACTUALIZACIÓN ESTADO ORDENES", "ordenes_traslados", $error, $cantidad_busqueda, $valores_creados, $valores_actualizados, $fecha_inicio_log, $mensaje_error);
     }
 }
