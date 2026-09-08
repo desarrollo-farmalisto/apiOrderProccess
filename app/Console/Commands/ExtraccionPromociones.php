@@ -79,18 +79,25 @@ class ExtraccionPromociones extends Command
                                 $netsuite_id                    = $value["values"]["MAX(internalid)"];
                                 $nombre                         = $value["values"]["GROUP(name)"];
                                 $codigo                         = $value["values"]["GROUP(code)"];
-                                $fecha_inicio                   = $value["values"]["MAX(startdate)"];
-                                $fecha_fin                      = $value["values"]["MAX(enddate)"];
 
-                                if(empty($fecha_inicio) || empty($fecha_fin) || count(explode("/", $fecha_inicio)) !== 3 || count(explode("/", $fecha_fin))){
+                                $fecha_inicio_raw               = trim((string) ($value["values"]["MAX(startdate)"] ?? ''));
+                                $fecha_fin_raw                  = trim((string) ($value["values"]["MAX(enddate)"] ?? ''));
+
+                                $fecha_inicio_obje              = \DateTime::createFromFormat('!j/n/Y', $fecha_inicio_raw);
+                                $fecha_fin_obje                 = \DateTime::createFromFormat('!j/n/Y', $fecha_fin_raw);
+
+                                if (!$fecha_inicio_obje || !$fecha_fin_obje) {
                                     $error = 1;
                                     $mensaje_error .=
                                                     "Promoción NetSuite ID {$netsuite_id} omitida por fecha inválida. " .
-                                                    "Fecha inicio: " . json_encode($fecha_inicio) .
-                                                    " - Fecha fin: " . json_encode($fecha_fin) . ". ";
+                                                    "Fecha inicio: " . json_encode($fecha_inicio_raw) .
+                                                    " - Fecha fin: " . json_encode($fecha_fin_raw) . ". ";
                                     
                                     continue;
                                 }
+
+                                $fecha_inicio                   = $fecha_inicio_obje->format('Y-m-d');
+                                $fecha_fin                      = $fecha_fin_obje->format('Y-m-d');
 
                                 $descuento                      = $value["values"]["MAX(discountrate)"];
                                 $id_busqueda_items              = empty($value["values"]["GROUP(itemssavedsearch)"]) ? null : $value["values"]["GROUP(itemssavedsearch)"][0]["value"];
