@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helper\Helper;
+use App\Jobs\RunScheduledExtraction;
 use App\Models\LogScheduleTask;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -22,19 +23,25 @@ class ScheduledTasksController extends Controller
 
     public function ejecutar($id)
     {
-        $comando = Helper::getComandoExtraccion($id);
-        $exitCode = Artisan::call($comando);
-        if ($exitCode === 0) {
+        try {
+            $comando = Helper::getComandoExtraccion($id);
+
+            RunScheduledExtraction::dispatch($comando)
+                ->onConnection('database')
+                ->onQueue('default');
+
             return response()->json(array(
                 "success" => true,
-                "mensaje" => "Tarea Programada ejecutada con exito."
+                "mensaje" => "Tarea programada enviada a ejecución!"
             ));
-        } else {
+
+        } catch (\Throwable $e) {
+
+            report($e);
             return response()->json(array(
                 "success" => false,
                 "mensaje" => "Ocurrio un problema al ejecutar la tarea programada!"
             ));
         }
     }
-
 }
