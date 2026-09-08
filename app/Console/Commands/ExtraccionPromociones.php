@@ -106,9 +106,6 @@ class ExtraccionPromociones extends Command
                                 $categorias                     = empty($value["values"]["MAX(customercategory)"]) ? '' : $value["values"]["MAX(customercategory)"];
                                 $ubicaciones                    = $value["values"]["MAX(location)"];
 
-                                //arreglar
-                                $fecha_inicio = Helper::arreglarFecha($fecha_inicio);
-                                $fecha_fin = Helper::arreglarFecha($fecha_fin);
                                 $descuento = abs(intval($descuento));
                                 $estado = Helper::checkFechaRango($fecha_inicio, $fecha_fin, date('Y-m-d'));
                                 $categorias = explode(",", $categorias);
