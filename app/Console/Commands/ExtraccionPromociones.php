@@ -81,6 +81,17 @@ class ExtraccionPromociones extends Command
                                 $codigo                         = $value["values"]["GROUP(code)"];
                                 $fecha_inicio                   = $value["values"]["MAX(startdate)"];
                                 $fecha_fin                      = $value["values"]["MAX(enddate)"];
+
+                                if(empty($fecha_inicio) || empty($fecha_fin) || count(explode("/", $fecha_inicio)) !== 3 || count(explode("/", $fecha_fin))){
+                                    $error = 1;
+                                    $mensaje_error .=
+                                                    "Promoción NetSuite ID {$netsuite_id} omitida por fecha inválida. " .
+                                                    "Fecha inicio: " . json_encode($fecha_inicio) .
+                                                    " - Fecha fin: " . json_encode($fecha_fin) . ". ";
+                                    
+                                    continue;
+                                }
+
                                 $descuento                      = $value["values"]["MAX(discountrate)"];
                                 $id_busqueda_items              = empty($value["values"]["GROUP(itemssavedsearch)"]) ? null : $value["values"]["GROUP(itemssavedsearch)"][0]["value"];
                                 $nombre_busqueda_items          = empty($value["values"]["GROUP(itemssavedsearch)"]) ? null : $value["values"]["GROUP(itemssavedsearch)"][0]["text"];
