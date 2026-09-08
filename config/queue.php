@@ -73,13 +73,20 @@ return [
 
         // PRODUCCIÓN
         'tp_galenica_project' => [
-            'driver' => 'redis',
-            'connection' => 'default',
+            'driver' => 'database',
+            'table' => 'jobs',
             'queue' => 'tp_galenica',
-            'retry_after' => 9000,
-            'block_for' => null,
+            'retry_after' => 1260,
             'after_commit' => false,
         ],
+        // 'tp_galenica_project' => [
+        //     'driver' => 'redis',
+        //     'connection' => 'default',
+        //     'queue' => 'tp_galenica',
+        //     'retry_after' => 9000,
+        //     'block_for' => null,
+        //     'after_commit' => false,
+        // ],
 
     ],
 
