@@ -160,7 +160,7 @@ class SendOrder implements ShouldQueue
             "metodo_pago" => $pedido->metodo_pago,
             "clase" => $clase, // ECOMERX SAS : GALENICA
             "ubicacion" => $pedido->ubicacion_id,
-            "vendedor_id" => ($pedido->usuario) ? $pedido->usuario->netsuite_id : null,
+            "vendedor_id" => ($pedido->usuario && $pedido->usuario->netsuite_id) ? $pedido->usuario->netsuite_id : null,
             "medio_pago" => $pedido->medio_pago_id,
             "tipo_envio" => 322182,//304543, // Envio Galenica
             "valor_envio" => intval($pedido->envio),
@@ -171,6 +171,7 @@ class SendOrder implements ShouldQueue
 
         //configurando para enviar a netsuite
         $json = json_encode($array_json);
+        \Illuminate\Support\Facades\Log::info('SendOrder JSON: ' . $json);
         $resultado_service = Netsuite::post(2182, $json);
         $decodificado = json_decode($resultado_service, true);
         if($decodificado["message"] == 'success'){
@@ -224,14 +225,16 @@ class SendOrder implements ShouldQueue
             ])
             ->whereNotNull('id_lote')
             ->whereNotNull('id_bin')
+            ->where('id_lote', '!=', '')
+            ->where('id_bin', '!=', '')
             ->orderBy('disponible', 'desc')
             ->get();
             if(count($verificacion) > 0){
                 foreach ($verificacion as $key => $val_veri) {
                     if($val_veri->disponible >= $cantidad){
                         $array_lotes[] = array(
-                            "id_lote" => ($val_veri->id_lote == 0) ? null : $val_veri->id_lote,
-                            "id_bin" => ($val_veri->id_bin == 0) ? null : $val_veri->id_bin,
+                            "id_lote" => !empty($val_veri->id_lote) ? $val_veri->id_lote : null,
+                            "id_bin" => !empty($val_veri->id_bin) ? $val_veri->id_bin : null,
                             "cantidad_disponible" => $cantidad
                         );
                         break;
@@ -241,16 +244,16 @@ class SendOrder implements ShouldQueue
                         } else {
                             if($cantidad_restante > $val_veri->disponible){
                                 $array_lotes[] = array(
-                                    "id_lote" => ($val_veri->id_lote == 0) ? null : $val_veri->id_lote,
-                                    "id_bin" => ($val_veri->id_bin == 0) ? null : $val_veri->id_bin,
+                                    "id_lote" => !empty($val_veri->id_lote) ? $val_veri->id_lote : null,
+                                    "id_bin" => !empty($val_veri->id_bin) ? $val_veri->id_bin : null,
                                     "cantidad_disponible" => $val_veri->disponible
                                 );
 
                                 $cantidad_restante = $cantidad_restante - $val_veri->disponible;
                             } else {
                                 $array_lotes[] = array(
-                                    "id_lote" => ($val_veri->id_lote == 0) ? null : $val_veri->id_lote,
-                                    "id_bin" => ($val_veri->id_bin == 0) ? null : $val_veri->id_bin,
+                                    "id_lote" => !empty($val_veri->id_lote) ? $val_veri->id_lote : null,
+                                    "id_bin" => !empty($val_veri->id_bin) ? $val_veri->id_bin : null,
                                     "cantidad_disponible" => $cantidad_restante
                                 );
 
