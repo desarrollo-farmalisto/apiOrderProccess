@@ -49,7 +49,11 @@ class SendOrder implements ShouldQueue
         $cliente = $pedido->cliente;
 
         if ($cliente && str_starts_with(strtolower($cliente->categoria ?? ''), 'farmalisto')) {
-            $categoria = Categoria::where('categoria', $cliente->categoria)->first();
+            $categoriaCliente = preg_replace('/\s*-\s+/', '-', trim($cliente->categoria ?? ''));
+            $categoria = Categoria::whereRaw("REPLACE(REPLACE(categoria, ' - ', '-'), '  ', ' ') = ?", [$categoriaCliente])->first();
+            if (!$categoria) {
+                $categoria = Categoria::whereRaw("LOWER(REPLACE(REPLACE(categoria, ' ', ''), '-', '')) = LOWER(REPLACE(REPLACE(?, ' ', ''), '-', ''))", [$cliente->categoria])->first();
+            }
             $claseComercial = $categoria?->clasesComerciales->first()?->clase_comercial ?? null;
 
             if (!$claseComercial) {
