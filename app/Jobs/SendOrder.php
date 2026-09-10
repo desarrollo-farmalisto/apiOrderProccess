@@ -49,11 +49,11 @@ class SendOrder implements ShouldQueue
         $cliente = $pedido->cliente;
 
         if ($cliente && str_starts_with(strtolower($cliente->categoria ?? ''), 'farmalisto')) {
-            $categoriaCliente = preg_replace('/\s*-\s+/', '-', trim($cliente->categoria ?? ''));
-            $categoria = Categoria::whereRaw("REPLACE(REPLACE(categoria, ' - ', '-'), '  ', ' ') = ?", [$categoriaCliente])->first();
-            if (!$categoria) {
-                $categoria = Categoria::whereRaw("LOWER(REPLACE(REPLACE(categoria, ' ', ''), '-', '')) = LOWER(REPLACE(REPLACE(?, ' ', ''), '-', ''))", [$cliente->categoria])->first();
-            }
+            $normalizado = strtolower(str_replace([' ', '-'], '', $cliente->categoria ?? ''));
+            $categoria = Categoria::get()->first(function ($cat) use ($normalizado) {
+                return strtolower(str_replace([' ', '-'], '', $cat->categoria)) === $normalizado;
+            });
+            \Illuminate\Support\Facades\Log::info('Farmalisto debug - categoria cliente: [' . $cliente->categoria . '] normalizado: [' . $normalizado . '] - categoria encontrada: ' . ($categoria ? $categoria->categoria : 'NULL') . ' - clase: ' . ($categoria?->clasesComerciales->first()?->clase_comercial ?? 'NULL'));
             $claseComercial = $categoria?->clasesComerciales->first()?->clase_comercial ?? null;
 
             if (!$claseComercial) {
