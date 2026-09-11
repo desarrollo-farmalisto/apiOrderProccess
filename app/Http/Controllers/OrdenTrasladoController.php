@@ -147,9 +147,16 @@ class OrdenTrasladoController extends Controller
         );
 
         $json = json_encode($array_json);
-        //$resultado_service = Netsuite::post(2140, $json, 'local');
-        $resultado_service = Netsuite::post(2159, $json);
+        $resultado_service = Netsuite::post(2140, $json, 'local'); // sandbox
+        // $resultado_service = Netsuite::post(2159, $json);
         $decodificado = json_decode($resultado_service, true);
+
+        if (!is_array($decodificado) || !isset($decodificado["message"])) {
+            Log::error('Respuesta inválida de Netsuite (POST): ' . $resultado_service);
+            OrdenesTraslado::findOrFail($traslado->id)->update(['estado' => 3]);
+            return ['estado' => false, 'mensaje' => 'Respuesta inválida de Netsuite'];
+        }
+
         if ($decodificado["message"] == 'success') {
 
             $id_netsuite = $decodificado["response"]["id"];
@@ -158,10 +165,10 @@ class OrdenTrasladoController extends Controller
             $items = null;
 
             //consultar informacion del traslado
-            //$resultado_consulta = Netsuite::get(2141, $id_netsuite, 0, 1, '', 'local');
-            $resultado_consulta = Netsuite::get(2160, $id_netsuite, 0, 1);
+            $resultado_consulta = Netsuite::get(2141, $id_netsuite, 0, 1, '', 'local');
+            // $resultado_consulta = Netsuite::get(2160, $id_netsuite, 0, 1);
             $decodificado_consulta = json_decode($resultado_consulta, true);
-            if ($decodificado_consulta["message"] == 'success') {
+            if (is_array($decodificado_consulta) && isset($decodificado_consulta["message"]) && $decodificado_consulta["message"] == 'success') {
                 $num_orden = $decodificado_consulta["response"]["num"];
                 $estado_ns = $decodificado_consulta["response"]["estado"];
                 $items = $decodificado_consulta["response"]["items"];
