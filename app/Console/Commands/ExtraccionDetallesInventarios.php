@@ -46,7 +46,7 @@ class ExtraccionDetallesInventarios extends Command
             //primera consulta a netsuite, consultar cantidades
             \Log::info('DetallesInventarios ambiente: ' . config('app.env'));
             // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_detalle_invt_tp_gal', 0, 1, 'InventoryBalance');
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_detalle_invt_tp_gal', 0, 1, 'InventoryBalance', 'local');
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_detalle_invt_tp_gal', 0, 1, '', 'local');
             \Log::info('DetallesInventarios resultado_cantidad raw: ' . $resultado_cantidad);
             if(intval($resultado_cantidad) > 0){
 
