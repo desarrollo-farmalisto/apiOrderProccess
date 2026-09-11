@@ -58,7 +58,7 @@ class ExtraccionKits extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    $resultado = Netsuite::get(2176, null, $start, $end);
+                    $resultado = Netsuite::get(2176, null, $start, $end, '', 'local');
                     \Log::info('kits 2175 raw [' . $start . '-' . $end . ']: ' . substr($resultado, 0, 500));
                     $data = json_decode($resultado, true);
                     if(isset($data['error'])){

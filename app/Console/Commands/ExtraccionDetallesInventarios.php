@@ -62,7 +62,7 @@ class ExtraccionDetallesInventarios extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    $resultado = Netsuite::get(2181, null, $start, $end);
+                    $resultado = Netsuite::get(2181, null, $start, $end, '', 'local');
                     $data = json_decode($resultado, true);
                     if(isset($data['error'])){
                         $error = 1;
