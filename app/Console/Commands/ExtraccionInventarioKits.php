@@ -45,6 +45,7 @@ class ExtraccionInventarioKits extends Command
             //primera consulta a netsuite, consultar cantidades
             $resultado_cantidad = Netsuite::get(2097, 'customsearchaxa_bus_com_tp_invkits_3', 0, 1, '', 'local');
             // $resultado_cantidad = Netsuite::get(2097, 'customsearchaxa_bus_com_tp_invkits_3', 0, 1);
+            \Log::info('InventarioKits resultado_cantidad raw: ' . $resultado_cantidad);
             if(intval($resultado_cantidad) > 0){
 
                 //vaciar tabla
@@ -61,7 +62,9 @@ class ExtraccionInventarioKits extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    $resultado = Netsuite::get(2174, null, $start, $end);
+                    // $resultado = Netsuite::get(2174, null, $start, $end);
+                    $resultado = Netsuite::get(2174, null, $start, $end, '', 'local');
+                    \Log::info('InventarioKits 2174 raw [' . $start . '-' . $end . ']: ' . substr($resultado, 0, 500));
                     $data = json_decode($resultado, true);
                     if(isset($data['error'])){
                         $error = 1;
