@@ -44,6 +44,7 @@ class ExtraccionDireccionesClientes extends Command
             //primera consulta a netsuite, consultar cantidades
             // $resultado_cantidad = Netsuite::get(2097, 'customsearch_galenica_direccion_cliente', 0, 1);
             $resultado_cantidad = Netsuite::get(2097, 'customsearch_galenica_direccion_cliente', 0, 1, '', 'local');
+            \Illuminate\Support\Facades\Log::info('Direcciones sandbox - resultado_cantidad raw: ' . $resultado_cantidad);
             if(intval($resultado_cantidad) > 0){
 
                 $start = 0;
