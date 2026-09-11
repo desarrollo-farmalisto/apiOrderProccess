@@ -43,7 +43,8 @@ class ExtraccionInventarioKits extends Command
         try {
 
             //primera consulta a netsuite, consultar cantidades
-            $resultado_cantidad = Netsuite::get(2097, 'customsearchaxa_bus_com_tp_invkits_3', 0, 1);
+            $resultado_cantidad = Netsuite::get(2097, 'customsearchaxa_bus_com_tp_invkits_3', 0, 1, 'local');
+            // $resultado_cantidad = Netsuite::get(2097, 'customsearchaxa_bus_com_tp_invkits_3', 0, 1);
             if(intval($resultado_cantidad) > 0){
 
                 //vaciar tabla

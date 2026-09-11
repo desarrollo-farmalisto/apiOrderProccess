@@ -45,7 +45,8 @@ class ExtraccionPromociones extends Command
         try {
 
             //primera consulta a netsuite, consultar cantidades
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_promotions_tp_galen', 0, 1);
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_promotions_tp_galen', 0, 1, 'local');
+            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_promotions_tp_galen', 0, 1);
             if(intval($resultado_cantidad) > 0){
 
                 $start = 0;

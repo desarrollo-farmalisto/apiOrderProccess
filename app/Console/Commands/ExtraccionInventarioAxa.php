@@ -43,7 +43,8 @@ class ExtraccionInventarioAxa extends Command
 
         try {
 
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_invent_galenica_t_2', 0, 1);
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_invent_galenica_t_2', 0, 1, 'local');
+            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_invent_galenica_t_2', 0, 1);
             if(intval($resultado_cantidad) > 0){
 
                 DB::table('inventario_axas')->truncate();
