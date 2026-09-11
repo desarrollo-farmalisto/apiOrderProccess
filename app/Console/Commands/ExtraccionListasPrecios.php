@@ -43,6 +43,7 @@ class ExtraccionListasPrecios extends Command
 
             //primera consulta a netsuite, consultar cantidades
             $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_level_price_bi', 0, 1, 'pricing');
+            \Log::info('ListaPrecios resultado_cantidad raw: ' . $resultado_cantidad);
             if(intval($resultado_cantidad) > 0){
 
                 $start = 0;
@@ -57,6 +58,7 @@ class ExtraccionListasPrecios extends Command
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
                     $resultado = Netsuite::get(2171, null, $start, $end);
+                    \Log::info('ListaPrecios 2171 raw [' . $start . '-' . $end . ']: ' . substr($resultado, 0, 500));
                     $data = json_decode($resultado, true);
                     if(isset($data['error'])){
                         $error = 1;
