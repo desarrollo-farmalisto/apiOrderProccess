@@ -43,8 +43,9 @@ class ExtraccionCatalogo extends Command
         try {
 
             //primera consulta a netsuite, consultar cantidades
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_catalogo_bi_galen', 0, 1, 'local');
             // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_catalogo_bi_galen', 0, 1);
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_catalogo_bi_galen', 0, 1, '', 'local');
+            \Log::info('Catalogo resultado_cantidad raw: ' . $resultado_cantidad);
             if(intval($resultado_cantidad) > 0){
 
                 $start = 0;
@@ -58,7 +59,9 @@ class ExtraccionCatalogo extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    $resultado = Netsuite::get(2175, null, $start, $end);
+                    // $resultado = Netsuite::get(2175, null, $start, $end);
+                    $resultado = Netsuite::get(2175, null, $start, $end, '', 'local');
+                    \Log::info('Catalogo 2175 raw [' . $start . '-' . $end . ']: ' . substr($resultado, 0, 500));
                     $data = json_decode($resultado, true);
                     if(isset($data['error'])){
                         $error = 1;
