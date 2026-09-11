@@ -41,7 +41,6 @@ class Netsuite {
         } else {
             $url = "https://$NETSUITE_AMBIENTE.restlets.api.netsuite.com/app/site/hosting/restlet.nl?script=$NETSUITE_SCRIPT_ID&deploy=$NETSUITE_DEPLOY_ID&idbusqueda=$id&type=$type&start=$start&end=$end";
         }
-        Log::info('Netsuite URL: ' . $url);
 
         $consumer = new OAuthConsumer($NETSUITE_CONSUMER_KEY, $NETSUITE_CONSUMER_SECRET);
         $token = new OAuthToken($NETSUITE_TOKEN_ID, $NETSUITE_TOKEN_SECRET);

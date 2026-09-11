@@ -172,7 +172,7 @@ class ExtraccionClientes extends Command
 
         } catch (\Throwable $e) {
             $error = 1;
-            $mensaje_error = $e;
+            $mensaje_error = $e->getMessage();
         }
 
         //por ultimo, generamos log
