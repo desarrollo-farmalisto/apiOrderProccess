@@ -15,7 +15,8 @@ class Netsuite {
 
     public static function get($script, $id, $start, $end, $type = '', $type_ambiente = null)
     {
-        $ambiente =  config('app.env');
+        // $ambiente =  config('app.env');
+        $ambiente = ($type_ambiente == null) ? config('app.env') : $type_ambiente;
         if($ambiente == 'local'){
             $NETSUITE_DEPLOY_ID = '1';
             $NETSUITE_AMBIENTE = '4572765-sb1';
