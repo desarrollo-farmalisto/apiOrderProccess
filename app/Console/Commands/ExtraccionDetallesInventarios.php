@@ -45,9 +45,8 @@ class ExtraccionDetallesInventarios extends Command
 
             //primera consulta a netsuite, consultar cantidades
             \Log::info('DetallesInventarios ambiente: ' . config('app.env'));
-            \Log::info('DetallesInventarios consumer_key: ' . substr(config('services.netsuiteProduction.CONSUMER_KEY'), 0, 10));
             // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_detalle_invt_tp_gal', 0, 1, 'InventoryBalance');
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_detalle_invt_tp_gal', 0, 1, '', 'local');
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_detalle_invt_tp_gal', 0, 1, 'InventoryBalance', 'local');
             \Log::info('DetallesInventarios resultado_cantidad raw: ' . $resultado_cantidad);
             if(intval($resultado_cantidad) > 0){
 
@@ -65,7 +64,7 @@ class ExtraccionDetallesInventarios extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    // $resultado = Netsuite::get(2181, null, $start, $end, '', 'local');
+                    // $resultado = Netsuite::get(2181, null, $start, $end);
                     $resultado = Netsuite::get(2181, null, $start, $end, '', 'local');
                     \Log::info('DetallesInventarios 2181 raw [' . $start . '-' . $end . ']: ' . substr($resultado, 0, 500));
                     $data = json_decode($resultado, true);
