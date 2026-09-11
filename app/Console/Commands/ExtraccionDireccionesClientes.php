@@ -60,6 +60,7 @@ class ExtraccionDireccionesClientes extends Command
 
                     // $resultado = Netsuite::get(2170, null, $start, $end);
                     $resultado = Netsuite::get(2170, null, $start, $end, '', 'local');
+                    \Illuminate\Support\Facades\Log::info('Direcciones 2170 raw: ' . substr($resultado, 0, 500));
                     $data = json_decode($resultado, true);
                     if(isset($data['error'])){
                         $error = 1;
