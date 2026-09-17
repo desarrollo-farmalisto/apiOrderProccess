@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Categoria;
 use App\Models\Cliente;
 use App\Services\GenerateLogs;
 use App\Services\Netsuite;
@@ -44,7 +45,6 @@ class ExtraccionClientes extends Command
             //primera consulta a netsuite, consultar cantidades
             // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_clientes_bi_galen', 0, 1);
             $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_clientes_bi_galen', 0, 1, '', 'local');
-            \Log::info('Clientes resultado_cantidad raw: ' . $resultado_cantidad);
             if(intval($resultado_cantidad) > 0){
 
                 $start = 0;
@@ -96,6 +96,13 @@ class ExtraccionClientes extends Command
 
                                 //validar
                                 $isinactive = ($isinactive == false) ? 0 : 1;
+
+                                if (!empty($categoria_id)) {
+                                    Categoria::updateOrCreate(
+                                        ['categoria' => $categoria],
+                                        ['categoria_netsuite_id' => $categoria_id]
+                                    );
+                                }
 
                                 $sql_validar = Cliente::select('id')->where('netsuite_id', $netsuite_id)->get();
                                 if(count($sql_validar) > 0){

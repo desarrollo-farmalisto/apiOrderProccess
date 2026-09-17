@@ -10,11 +10,11 @@ class Categoria extends Model
     use HasFactory;
 
     protected $table = 'categorias';
-    protected $fillable = ['categoria', 'status'];
+    protected $fillable = ['categoria_netsuite_id', 'categoria', 'status'];
     protected $casts = ['status' => 'boolean'];
 
     public function clasesComerciales()
     {
-        return $this->belongsToMany(ClaseComercial::class, 'clases_comerciales_categorias', 'categoria_id', 'clase_comercial_id')->wherePivot('status', 1);
+        return $this->belongsToMany(ClaseComercial::class, 'clases_comerciales_categorias', 'categoria_id', 'clase_comercial_id')->wherePivot('status', '1');
     }
 }

@@ -45,32 +45,49 @@ class SendOrder implements ShouldQueue
     {
         $pedido = Pedidos::findOrFail($id);
 
-        $clase = 1707;
+        if ($pedido->estado == 4 || !empty($pedido->netsuite_id)) {
+            return;
+        }
+
         $cliente = $pedido->cliente;
 
-        if ($cliente && str_starts_with(strtolower($cliente->categoria ?? ''), 'farmalisto')) {
-            $normalizado = strtolower(str_replace([' ', '-'], '', $cliente->categoria ?? ''));
-            $categoria = Categoria::get()->first(function ($cat) use ($normalizado) {
-                return strtolower(str_replace([' ', '-'], '', $cat->categoria)) === $normalizado;
-            });
-            \Illuminate\Support\Facades\Log::info('Farmalisto debug - categoria cliente: [' . $cliente->categoria . '] normalizado: [' . $normalizado . '] - categoria encontrada: ' . ($categoria ? $categoria->categoria : 'NULL') . ' - clase: ' . ($categoria?->clasesComerciales->first()?->clase_comercial ?? 'NULL'));
-            $claseComercial = $categoria?->clasesComerciales->first()?->clase_comercial ?? null;
+        $categoria = $cliente ? Categoria::where('categoria_netsuite_id', $cliente->categoria_id)->first() : null;
+        $claseComercial = $categoria ? $categoria->clasesComerciales->first() : null;
 
-            if (!$claseComercial) {
+        if (!$claseComercial) {
+            $pedido->estado = 5;
+            $pedido->save();
+
+            LogsNetsuites::create([
+                'tipo'         => 'FACTURA',
+                'respuesta_id' => $pedido->id,
+                'fecha'        => now()->format('Y-m-d'),
+                'error'        => 'Si',
+                'mensaje'      => "ERROR CREACION FACTURA #{$pedido->id}, Mensaje: No se encontró una clase comercial asociada a la categoría del cliente.",
+            ]);
+            return;
+        }
+
+        // Valida que cada producto agregado pertenezca a la lista de precios FARMALISTO
+        foreach($pedido->productos as $producto) {
+            
+            $enLista = Catalogo::where('producto_netsuite_id', $producto->producto_netsuite_id)->where('lista_precio_id', $pedido->lista_precio_id)->exists();
+            if(!$enLista) {
                 $pedido->estado = 5;
                 $pedido->save();
 
                 LogsNetsuites::create([
-                    'tipo' => 'FACTURA',
+                    'tipo'         => 'FACTURA',
                     'respuesta_id' => $pedido->id,
-                    'fecha' => now()->format('Y-m-d'),
-                    'error' => 'Si',
-                    'mensaje' => "ERROR CREACION FACTURA FARMALISTO #{$pedido->id}, Mensaje: No se encontró una clase comercial asociada a la categoría del cliente.",
+                    'fecha'        => now()->format('Y-m-d'),
+                    'error'        => 'Si',
+                    'mensaje'      => "ERROR CREACION FACTURA #{$pedido->id}, Mensaje: El producto {$producto->producto_netsuite_id} no pertenece a la lista de precios del cliente FARMALISTO.",
                 ]);
                 return;
             }
-            $clase = $claseComercial;
         }
+
+        $clase = 1707;
 
         //agregar los items
         $items = array();
@@ -133,7 +150,8 @@ class SendOrder implements ShouldQueue
                         "cantidad" => $producto->cantidad,
                         "precio" => $producto->precio_unitario,
                         "ubicacion" => $pedido->ubicacion_id,
-                        "es_lote" => $producto->es_lote,
+                        // TODO: revisar manejo de lotes cuando id_bin es null en detalles_inventarios
+                        "es_lote" => ($producto->es_lote == 1 && count($array_lotes) > 0) ? 1 : 0,
                         "items_lotes" => $array_lotes,
                         "es_promocion" => 0
                     );
@@ -175,7 +193,7 @@ class SendOrder implements ShouldQueue
 
         //configurando para enviar a netsuite
         $json = json_encode($array_json);
-        \Illuminate\Support\Facades\Log::info('SendOrder JSON: ' . $json);
+
         $resultado_service = Netsuite::post(2182, $json);
         $decodificado = json_decode($resultado_service, true);
         if($decodificado["message"] == 'success'){

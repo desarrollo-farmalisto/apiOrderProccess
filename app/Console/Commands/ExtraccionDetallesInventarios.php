@@ -44,10 +44,7 @@ class ExtraccionDetallesInventarios extends Command
         try {
 
             //primera consulta a netsuite, consultar cantidades
-            \Log::info('DetallesInventarios ambiente: ' . config('app.env'));
-            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_detalle_invt_tp_gal', 0, 1, 'InventoryBalance');
             $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_detalle_invt_tp_gal', 0, 1, 'InventoryBalance', 'local');
-            \Log::info('DetallesInventarios resultado_cantidad raw: ' . $resultado_cantidad);
             if(intval($resultado_cantidad) > 0){
 
                 //vaciar tabla
@@ -66,7 +63,6 @@ class ExtraccionDetallesInventarios extends Command
 
                     // $resultado = Netsuite::get(2181, null, $start, $end);
                     $resultado = Netsuite::get(2181, null, $start, $end, '', 'local');
-                    \Log::info('DetallesInventarios 2181 raw [' . $start . '-' . $end . ']: ' . substr($resultado, 0, 500));
                     $data = json_decode($resultado, true);
                     if(isset($data['error'])){
                         $error = 1;
@@ -89,7 +85,7 @@ class ExtraccionDetallesInventarios extends Command
                                 $nombre_item                            = $value["values"]["item"][0]["text"];
                                 $id_lote                                = empty($value["values"]["inventoryNumber.internalid"]) ? null : $value["values"]["inventoryNumber.internalid"][0]["text"];
                                 $lote                                   = empty($value["values"]["inventorynumber"]) ? null : $value["values"]["inventorynumber"][0]["text"];
-                                $id_bin                                 = empty($value["values"]["binNumber.internalid"]) ? null : $value["values"]["binNumber.internalid"][0]["text"];
+                                $id_bin                                 = empty($value["values"]["binnumber"]) ? null : $value["values"]["binnumber"][0]["value"];
                                 $bin                                    = empty($value["values"]["binnumber"]) ? null : $value["values"]["binnumber"][0]["text"];
                                 $ubicacion_id                           = empty($value["values"]["location"]) ? null : $value["values"]["location"][0]["value"];
                                 $ubicacion                              = empty($value["values"]["location"]) ? null : $value["values"]["location"][0]["text"];

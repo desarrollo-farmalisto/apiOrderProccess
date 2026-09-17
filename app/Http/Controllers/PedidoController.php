@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Categoria;
+use App\Models\ClaseComercialCategoria;
 use App\Models\OrdenesTraslado;
 
 class PedidoController extends Controller
@@ -52,6 +54,7 @@ class PedidoController extends Controller
         LEFT JOIN inventarios AS i ON c.producto_netsuite_id = i.producto_netsuite_id AND i.id_ubicacion = $ubicacion
         LEFT JOIN inventario_kits AS ik ON c.producto_netsuite_id = ik.producto_netsuite_id AND ik.id_ubicacion = $ubicacion
         WHERE c.lista_precio_id = $lista AND c.isinactive = 0 AND c.precion_con_iva > 0");
+        
         if(count($datos) > 0) {
             foreach ($datos as $key => $value) {
                 $retorno[] = array(
@@ -84,9 +87,49 @@ class PedidoController extends Controller
         LEFT JOIN promociones AS p ON ip.promocion_id = p.id
         LEFT JOIN categoria_promocions AS cp ON p.id = cp.promocion_id
         WHERE ip.producto_netsuite_id = $producto AND p.isinactive = 0 AND cp.nombre = '$categoria'");
+        
         return response()->json(array(
             "data" => $retorno
         ));
+    }
+
+    private function recalcularItems(array $items, int $lista_precio_id): array
+    {
+        $totalesPedido = ['subtotal' => 0, 'descuento' => 0, 'impuesto' => 0];
+        $itemsCalculados = [];
+
+        foreach ($items as $item) {
+            $catalogo = Catalogo::where('producto_netsuite_id', intval($item['producto_id']))
+                ->where('lista_precio_id', $lista_precio_id)
+                ->first();
+
+            $precio_unitario = $catalogo ? (int) round($catalogo->precio_venta) : intval($item['precio_unitario']);
+            $tasa_iva        = $catalogo ? (float) $catalogo->iva : floatval($item['iva']);
+            $cantidad        = intval($item['cantidad']);
+            $pct_descuento   = intval($item['porcentaje_descuento'] ?? 0);
+
+            $subtotal_item   = $precio_unitario * $cantidad;
+            $descuento_item  = (int) round($subtotal_item * $pct_descuento / 100);
+            $base_gravable   = $subtotal_item - $descuento_item;
+            $iva_item        = (int) round($base_gravable * $tasa_iva / 100);
+            $total_item      = $base_gravable + $iva_item;
+            $precio_con_iva  = $precio_unitario + (int) round($precio_unitario * $tasa_iva / 100);
+
+            $totalesPedido['subtotal']  += $subtotal_item;
+            $totalesPedido['descuento'] += $descuento_item;
+            $totalesPedido['impuesto']  += $iva_item;
+
+            $itemsCalculados[] = array_merge($item, [
+                'precio_unitario'    => $precio_unitario,
+                'iva'                => $tasa_iva,
+                'precio_final'       => $precio_con_iva,
+                'descuento'          => $descuento_item,
+                'subtotal'           => $subtotal_item,
+                'total'              => $total_item,
+            ]);
+        }
+
+        return ['items' => $itemsCalculados, 'totales' => $totalesPedido];
     }
 
     public function create(Request $request)
@@ -119,6 +162,40 @@ class PedidoController extends Controller
             ]);
         }
 
+        $cliente = Cliente::where('netsuite_id', $request->cliente)->first();
+        $categoryId = Categoria::where('categoria_netsuite_id', $cliente->categoria_id)->first();
+        $tieneClase = ClaseComercialCategoria::where('categoria_id', $categoryId->id)->where('status', '1')->exists();
+
+        if (!$tieneClase) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['error' => 'No se puede crear el pedido: la categoría del cliente no tiene una clase comercial asignada.'],
+                'data' => []
+            ]);
+        }
+
+        //Validar que cada producto agregado pertenezca a la lista de precios Farmalisto
+        foreach($request->items as $item) {
+            $enLista = Catalogo::where('producto_netsuite_id', intval($item['producto_id']))
+                ->where('lista_precio_id', intval($request->lista_precio))
+                ->exists();
+
+            if (!$enLista) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['error' => 'El producto "' . $item['producto'] . '" no pertenece a la lista de precios FARMALISTO.'],
+                    'data' => []
+                ]);
+            }
+
+        }
+
+        $calculado = $this->recalcularItems($request->items, intval($request->lista_precio));
+        $itemsCalculados = $calculado['items'];
+        $totales = $calculado['totales'];
+        $envio = intval($request->envio);
+        $totalPedido = $totales['subtotal'] - $totales['descuento'] + $totales['impuesto'] + $envio;
+
         $crear_header = array(
             'user_id' => Auth::user()->id,
             'cliente_id' => $request->cliente,
@@ -134,11 +211,11 @@ class PedidoController extends Controller
             'estado' => 1,
             'cantidad_items' => $request->cantidad_items,
             'cantidad_items_solicitado' => $request->cantidad_items_solicitado,
-            'impuesto' => intval($request->impuesto),
-            'subtotal' => intval($request->subtotal),
-            'descuento' => intval($request->descuento),
-            'envio' => intval($request->envio),
-            'total' => intval($request->total)
+            'impuesto' => $totales['impuesto'],
+            'subtotal' => $totales['subtotal'],
+            'descuento' => $totales['descuento'],
+            'envio' => $envio,
+            'total' => $totalPedido
         );
 
         $pedido_id = null;
@@ -147,8 +224,8 @@ class PedidoController extends Controller
             if($result_crete = Pedidos::create($crear_header)) {
 
                 $pedido_id = $result_crete->id;
-                if(count($request->items) > 0){
-                    foreach ($request->items as $key => $item) {
+                if(count($itemsCalculados) > 0){
+                    foreach ($itemsCalculados as $key => $item) {
 
                         $array_detalle = array(
                             'pedido_id' => $pedido_id,
@@ -159,13 +236,13 @@ class PedidoController extends Controller
                             'cantidad' => $item["cantidad"],
                             'precio_unitario' => $item["precio_unitario"],
                             'iva' => $item["iva"],
-                            'precio' => intval($item["precio_final"]),
+                            'precio' => $item["precio_final"],
                             'promocion_netsuite_id' => $item["promocion_id"],
                             'promocion' => $item["promocion"],
-                            'porcentaje_descuento' => $item["porcentaje_descuento"],
-                            'valor_descuento' => intval($item["descuento"]),
-                            'subtotal' => intval($item["subtotal"]),
-                            'total' => intval($item["total"]),
+                            'porcentaje_descuento' => $item["porcentaje_descuento"] ?? 0,
+                            'valor_descuento' => $item["descuento"],
+                            'subtotal' => $item["subtotal"],
+                            'total' => $item["total"],
                             'es_lote' => $item["es_lote"],
                             'active' => 1
                         );
@@ -193,12 +270,10 @@ class PedidoController extends Controller
                 	}
                 }
                 
+                if(intval($request->type) === 2) {
 
-                if($request->type == 2) {
-
-                    $pedido_nuevo = Pedidos::findOrFail($pedido_id);
-                    $pedido_nuevo->estado = 3;
-                    $pedido_nuevo->save();
+                    $result_crete->estado = 3;
+                    $result_crete->save();
 
                     $sendOrder = SendOrder::dispatch($pedido_id)->onQueue('tp_galenica')->onConnection('tp_galenica_project');
 
@@ -607,6 +682,12 @@ class PedidoController extends Controller
         $pedido = Pedidos::find($request->id);
         if($pedido) {
 
+            $calculado = $this->recalcularItems($request->items, intval($pedido->lista_precio_id));
+            $itemsCalculados = $calculado['items'];
+            $totales = $calculado['totales'];
+            $envio = intval($request->envio);
+            $totalPedido = $totales['subtotal'] - $totales['descuento'] + $totales['impuesto'] + $envio;
+
             $actualizar = array(
                 'nota' => $request->nota,
                 'transportadora_id' => $request->transportadora,
@@ -616,20 +697,20 @@ class PedidoController extends Controller
                 'estado' => 1,
                 'cantidad_items' => $request->cantidad_items,
                 'cantidad_items_solicitado' => $request->cantidad_items_solicitado,
-                'impuesto' => $request->impuesto,
-                'subtotal' => $request->subtotal,
-                'descuento' => $request->descuento,
-                'envio' => $request->envio,
-                'total' => $request->total,
+                'impuesto' => $totales['impuesto'],
+                'subtotal' => $totales['subtotal'],
+                'descuento' => $totales['descuento'],
+                'envio' => $envio,
+                'total' => $totalPedido,
                 'user_id_updated' => Auth::user()->id
             );
 
-            if(Pedidos::findOrFail($request->id)->update($actualizar)) {
+            if($pedido->update($actualizar)) {
 
                 $pedido_id = $request->id;
-                if(count($request->items) > 0){
+                if(count($itemsCalculados) > 0){
                     DetallesPedidos::where('pedido_id', $request->id)->delete();
-                    foreach ($request->items as $key => $item) {
+                    foreach ($itemsCalculados as $key => $item) {
                         $array_detalle = array(
                             'pedido_id' => $pedido_id,
                             'producto_netsuite_id' => $item["producto_id"],
@@ -642,7 +723,7 @@ class PedidoController extends Controller
                             'precio' => $item["precio_final"],
                             'promocion_netsuite_id' => $item["promocion_id"],
                             'promocion' => $item["promocion"],
-                            'porcentaje_descuento' => $item["porcentaje_descuento"],
+                            'porcentaje_descuento' => $item["porcentaje_descuento"] ?? 0,
                             'valor_descuento' => $item["descuento"],
                             'subtotal' => $item["subtotal"],
                             'total' => $item["total"],

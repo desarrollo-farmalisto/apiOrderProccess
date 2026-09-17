@@ -2,46 +2,46 @@
 
 namespace Database\Seeders;
 
+use App\Models\Categoria;
+use App\Models\ClaseComercial;
 use App\Models\ClaseComercialCategoria;
 use Illuminate\Database\Seeder;
 
 class ClasesComercialesCategoriasSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
     public function run()
     {
-        $matrices = [
-            ['clase_comercial_id' => 1, 'categoria_id' => 1],
-            ['clase_comercial_id' => 1, 'categoria_id' => 2],
-            ['clase_comercial_id' => 2, 'categoria_id' => 3],
-            ['clase_comercial_id' => 3, 'categoria_id' => 4],
-            ['clase_comercial_id' => 1, 'categoria_id' => 1],
-            ['clase_comercial_id' => 1, 'categoria_id' => 5],
-            ['clase_comercial_id' => 1, 'categoria_id' => 6],
-            ['clase_comercial_id' => 1, 'categoria_id' => 7],
-            ['clase_comercial_id' => 4, 'categoria_id' => 8],
-            ['clase_comercial_id' => 1, 'categoria_id' => 9],
-            ['clase_comercial_id' => 1, 'categoria_id' => 10],
-            ['clase_comercial_id' => 1, 'categoria_id' => 11],
-            ['clase_comercial_id' => 1, 'categoria_id' => 12],
-            ['clase_comercial_id' => 1, 'categoria_id' => 13],
-            ['clase_comercial_id' => 5, 'categoria_id' => 14],
-            ['clase_comercial_id' => 5, 'categoria_id' => 15],
-            ['clase_comercial_id' => 1, 'categoria_id' => 16],
+        $matriz = [
+            '- None -'                        => '11010101 Pacientes Farmalisto',
+            'AUTOSERVICIOS'                   => '11010101 Pacientes Farmalisto',
+            'CONSUMO SUBDISTRIBUIDOR'         => '11010101 Pacientes Farmalisto',
+            'EMPLEADO - G'                    => '11020103 Empresas Farmalisto',
+            'EMPRESARIAL - G'                 => '11030104 Medicos Farmalisto IPS',
+            'Farmalisto - Página Web'         => '11010101 Pacientes Farmalisto',
+            'Farmalisto -  Call Center'       => '11010101 Pacientes Farmalisto',
+            'Farmalisto -  Whatsapp'          => '11010101 Pacientes Farmalisto',
+            'Farmalisto CAFAM Desarrollo Web' => '11050506 Servicios Admin Pag. Web Cafam',
+            'GALENICA WEB'                    => '11010101 Pacientes Farmalisto',
+            'NO DEFINIDO'                     => '11010101 Pacientes Farmalisto',
+            'OPERADOR LOGISTICO'              => '11010101 Pacientes Farmalisto',
+            'PACIENTE - G'                    => '11010101 Pacientes Farmalisto',
+            'PAGINA WEB GALENICA'             => '11010101 Pacientes Farmalisto',
+            'UNIXA | MARKET PLACE'            => '11040305 Market Place ML Farmalisto',
+            'UNIXA | MAXPHARMA'               => '11040305 Market Place ML Farmalisto',
+            'UNIXA |CONSUMIDOR FINAL'         => '11010101 Pacientes Farmalisto',
         ];
 
-        foreach ($matrices as $matriz) {
+        ClaseComercialCategoria::truncate();
+
+        foreach ($matriz as $nombre_categoria => $nombre_clase) {
+            $categoria = Categoria::where('categoria', $nombre_categoria)->first();
+            $clase     = ClaseComercial::where('clase_comercial', $nombre_clase)->first();
+
+            if (!$categoria || !$clase) continue;
+
             ClaseComercialCategoria::updateOrInsert(
-                [
-                    'clase_comercial_id' => $matriz['clase_comercial_id'],
-                    'categoria_id'       => $matriz['categoria_id'],
-                    'created_at'         => now(),
-                    'updated_at'         => now(),
-                ]
+                ['categoria_id' => $categoria->id, 'clase_comercial_id' => $clase->id],
+                ['status' => '1', 'created_at' => now(), 'updated_at' => now()]
             );
         }
     }

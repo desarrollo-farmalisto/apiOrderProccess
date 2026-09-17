@@ -18,7 +18,6 @@ class DatabaseSeeder extends Seeder
         $this->call(TransportadoraSeeder::class);
         $this->call(MediosPagoSeeder::class);
         $this->call(ClasesComercialesSeeder::class);
-        $this->call(ClasesComercialesCategoriasSeeder::class);
         $this->call(IntegracionProveedorSeeder::class);
     }
 }
