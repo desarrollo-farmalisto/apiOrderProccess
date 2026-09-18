@@ -22,6 +22,8 @@ class AuthController extends Controller
 
         Log::info('usuario');
         Log::info($val_usuario);
+
+        dd($val_usuario);
         // if ($val_usuario) {
         //     if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
         //         if($val_usuario->active == 1){
