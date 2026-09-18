@@ -16,7 +16,10 @@ class AuthController extends Controller
         $token = null;
         $user = null;
 
+        Log::info('Intento de inicio de sesión para el usuario: ' . $request->email);
         $val_usuario = User::where('email', $request->email)->first();
+        Log::info('usuario');
+        Log::info($val_usuario);
         if ($val_usuario) {
             if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
                 if($val_usuario->active == 1){
