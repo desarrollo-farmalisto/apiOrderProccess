@@ -29,7 +29,7 @@ return [
     */
 
     'env' => env('APP_ENV', 'local'),
-    'ambiente' => 'local',
+    'ambiente' => env('APP_AMBIENTE', 'local'),
 
     /*
     |--------------------------------------------------------------------------
