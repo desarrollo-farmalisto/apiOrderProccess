@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Helper\Helper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Log;
@@ -23,6 +24,9 @@ class AuthController extends Controller
                 if (empty($val_usuario->categoria)) {
                     $error = true;
                     $message = 'Lo sentimos, pero su usuario no tiene un rol asignado, por favor comuniquese con el administrador del sistema para que le asigne uno.';
+
+                    (new Helper)->storeAuditLogs('Login', 'User', 5, 'Se intentó iniciar sesión con un usuario sin rol asignado.', json_encode($val_usuario), 'warning');
+
                 } else {
                     if($val_usuario->active == 1){
                         $user = Auth::user();

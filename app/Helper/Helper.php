@@ -2,6 +2,8 @@
 
 namespace App\Helper;
 
+use App\Models\AuditLog;
+
 class Helper
 {
 
@@ -104,5 +106,26 @@ class Helper
             12 => "extraccion:detalles-inventarios"
         );
         return $data;
+    }
+
+    public function storeAuditLogs($action, $model, $modelId, $description, $payload = '{}', $level)
+    {
+        try {
+            $auditLog = new AuditLog();
+            $auditLog->user_id = auth()->id() ?? 1;
+            $auditLog->action = $action;
+            $auditLog->model = $model;
+            $auditLog->model_id = $modelId;
+            $auditLog->description = $description;
+            $auditLog->ip_address = request()->ip();
+            $auditLog->user_agent = request()->userAgent();
+            $auditLog->payload = json_encode($payload);
+            $auditLog->level = $level;
+            $auditLog->save();
+
+            return 1;
+        } catch (\Exception $e) {
+            throw new \Exception('Error al guardar el registro de auditoría: ' . $e->getMessage());
+        }
     }
 }
