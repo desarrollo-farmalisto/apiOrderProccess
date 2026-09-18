@@ -17,19 +17,20 @@ class AuthController extends Controller
         $token = null;
         $user = null;
 
-        Log::info('Intento de inicio de sesión para el usuario: ' . $request->email);
         $val_usuario = User::where('email', $request->email)->first();
-        
-        Log::info('usuario');
-        Log::info($val_usuario);
         if ($val_usuario) {
             if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
-                if($val_usuario->active == 1){
-                    $user = Auth::user();
-                    $token = $user->createToken('token', ['*'], now()->addDays(1))->plainTextToken;
-                } else {
+                if (empty($val_usuario->categoria)) {
                     $error = true;
-                    $message = 'Lo sentimos, actualmente estas inactivo, no podras iniciar sesión, para mayor información comunicate con nosotros!';
+                    $message = 'Lo sentimos, pero su usuario no tiene un rol asignado, por favor comuniquese con el administrador del sistema para que le asigne uno.';
+                } else {
+                    if($val_usuario->active == 1){
+                        $user = Auth::user();
+                        $token = $user->createToken('token', ['*'], now()->addDays(1))->plainTextToken;
+                    } else {
+                        $error = true;
+                        $message = 'Lo sentimos, actualmente estas inactivo, no podras iniciar sesión, para mayor información comunicate con nosotros!';
+                    }
                 }
             } else {
                 $error = true;
