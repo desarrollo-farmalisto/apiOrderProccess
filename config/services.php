@@ -52,4 +52,12 @@ return [
         'URL' => env('PRODUCTION_MIDDLEWARE_ABBOTT_URL'),
     ],
 
+    // Shopify Farmalisto
+    'Shopify' => [
+        'store' => env('SHOPIFY_STORE'),
+        'client_id' => env('SHOPIFY_CLIENT_ID'),
+        'client_secret' => env('SHOPIFY_CLIENT_SECRET'),
+        'api_version' => env('SHOPIFY_API_VERSION'),
+    ],
+
 ];

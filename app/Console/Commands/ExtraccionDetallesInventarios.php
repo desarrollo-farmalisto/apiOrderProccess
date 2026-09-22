@@ -45,7 +45,10 @@ class ExtraccionDetallesInventarios extends Command
 
             //primera consulta a netsuite, consultar cantidades
             $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_detalle_invt_tp_gal', 0, 1, 'InventoryBalance', 'local');
-            if(intval($resultado_cantidad) > 0){
+            \Log::info('DetallesInventarios resultado_cantidad raw: ' . $resultado_cantidad);
+            $resultado_cantidad_decoded = json_decode($resultado_cantidad, true);
+            $cantidad = is_array($resultado_cantidad_decoded) ? ($resultado_cantidad_decoded['count'] ?? intval($resultado_cantidad)) : intval($resultado_cantidad);
+            if($cantidad > 0){
 
                 //vaciar tabla
                 DB::table('detalles_inventarios')->truncate();
@@ -53,7 +56,7 @@ class ExtraccionDetallesInventarios extends Command
                 $start = 0;
                 $end = 0;
 
-                $cantidad_for = ceil($resultado_cantidad/1000)*1000;
+                $cantidad_for = ceil($cantidad/1000)*1000;
                 $cantidad_dividir = intval($cantidad_for / 1000);
                 for ($i=0; $i < $cantidad_dividir ; $i++) {
 

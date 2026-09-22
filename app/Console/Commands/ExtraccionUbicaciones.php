@@ -44,13 +44,15 @@ class ExtraccionUbicaciones extends Command
             //primera consulta a netsuite, consultar cantidades
             // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_bodegas_gal', 0, 1);
             $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_bodegas_gal', 0, 1, '', 'local');
-            \Log::info('Ubicaciones resultado_cantidad raw: ' . $resultado_cantidad);
-            if(intval($resultado_cantidad) > 0){
+            $resultado_cantidad_decoded = json_decode($resultado_cantidad, true);
+            $cantidad = isset($resultado_cantidad_decoded['count']) ? intval($resultado_cantidad_decoded['count']) : intval($resultado_cantidad);
+
+            if($cantidad > 0){
 
                 $start = 0;
                 $end = 0;
 
-                $cantidad_for = ceil($resultado_cantidad/1000)*1000;
+                $cantidad_for = ceil($cantidad/1000)*1000;
                 $cantidad_dividir = intval($cantidad_for / 1000);
                 for ($i=0; $i < $cantidad_dividir ; $i++) {
 
@@ -60,7 +62,7 @@ class ExtraccionUbicaciones extends Command
 
                     // $resultado = Netsuite::get(2166, null, $start, $end);
                     $resultado = Netsuite::get(2166, null, $start, $end, '', 'local');
-                    \Log::info('Ubicaciones 2166 raw [' . $start . '-' . $end . ']: ' . substr($resultado, 0, 500));
+                    // \Log::info('Ubicaciones 2166 raw [' . $start . '-' . $end . ']: ' . substr($resultado, 0, 500));
                     $data = json_decode($resultado, true);
                     if(isset($data['error'])){
                         $error = 1;

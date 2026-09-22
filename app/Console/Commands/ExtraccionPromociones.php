@@ -48,12 +48,14 @@ class ExtraccionPromociones extends Command
             // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_promotions_tp_galen', 0, 1);
             $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_promotions_tp_galen', 0, 1, '', 'local');
             \Log::info('Promociones resultado_cantidad raw: ' . $resultado_cantidad);
-            if(intval($resultado_cantidad) > 0){
+            $resultado_cantidad_decoded = json_decode($resultado_cantidad, true);
+            $cantidad = is_array($resultado_cantidad_decoded) ? ($resultado_cantidad_decoded['count'] ?? intval($resultado_cantidad)) : intval($resultado_cantidad);
+            if($cantidad > 0){
 
                 $start = 0;
                 $end = 0;
 
-                $cantidad_for = ceil($resultado_cantidad/1000)*1000;
+                $cantidad_for = ceil($cantidad/1000)*1000;
                 $cantidad_dividir = intval($cantidad_for / 1000);
                 for ($i=0; $i < $cantidad_dividir ; $i++) {
 
@@ -184,14 +186,17 @@ class ExtraccionPromociones extends Command
 
     private function ejecutarItemsPromociones($promocion)
     {
-        $result_cant = Netsuite::get(2097, $promocion->id_busqueda_items, 0, 1);
-        if(intval($result_cant) > 0){
+        // $result_cant = Netsuite::get(2097, $promocion->id_busqueda_items, 0, 1);
+        $result_cant = Netsuite::get(2097, $promocion->id_busqueda_items, 0, 1, '', 'local');
+        $result_cant_decoded = json_decode($result_cant, true);
+        $cant = is_array($result_cant_decoded) ? ($result_cant_decoded['count'] ?? intval($result_cant)) : intval($result_cant);
+        if($cant > 0){
 
             ItemsPromociones::where('promocion_id', $promocion->id)->delete();
 
             $start_prom = 0;
             $end_prom = 0;
-            $cantidad_for_prom = ceil($result_cant/1000)*1000;
+            $cantidad_for_prom = ceil($cant/1000)*1000;
             $cantidad_dividir_prom = intval($cantidad_for_prom / 1000);
 
             for ($i=0; $i < $cantidad_dividir_prom ; $i++) {
@@ -201,7 +206,8 @@ class ExtraccionPromociones extends Command
                 $start_prom= str_pad($start_prom, mb_strlen($end_prom), "0", STR_PAD_LEFT);
 
                 //consultar a netsuite
-                $resultado_prom = Netsuite::get(2178, $promocion->id_busqueda_items, $start_prom, $end_prom);
+                // $resultado_prom = Netsuite::get(2178, $promocion->id_busqueda_items, $start_prom, $end_prom);
+                $resultado_prom = Netsuite::get(2178, $promocion->id_busqueda_items, $start_prom, $end_prom, '', 'local');
                 $data_prom = json_decode($resultado_prom, true);
 
                 //recorrer datos

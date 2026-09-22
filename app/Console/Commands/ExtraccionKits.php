@@ -44,13 +44,15 @@ class ExtraccionKits extends Command
             //primera consulta a netsuite, consultar cantidades
             $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_tp_kits_galenica', 0, 1, '', 'local');
             \Log::info('Catalogo resultado_cantidad raw: ' . $resultado_cantidad);
+            $resultado_cantidad_decoded = json_decode($resultado_cantidad, true);
+            $cantidad = is_array($resultado_cantidad_decoded) ? ($resultado_cantidad_decoded['count'] ?? intval($resultado_cantidad)) : intval($resultado_cantidad);
             // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_tp_kits_galenica', 0, 1);
-            if(intval($resultado_cantidad) > 0){
+            if($cantidad > 0){
 
                 $start = 0;
                 $end = 0;
 
-                $cantidad_for = ceil($resultado_cantidad/1000)*1000;
+                $cantidad_for = ceil($cantidad/1000)*1000;
                 $cantidad_dividir = intval($cantidad_for / 1000);
                 for ($i=0; $i < $cantidad_dividir ; $i++) {
 
