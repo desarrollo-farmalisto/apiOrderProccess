@@ -83,6 +83,7 @@ class PedidoController extends Controller
 
     public function getPromociones($producto, $categoria)
     {
+        \Log::info('getPromociones - producto: ' . $producto . ' | categoria: ' . $categoria);
         $retorno = DB::select("SELECT p.netsuite_id AS code, p.nombre AS name, p.descuento FROM items_promociones AS ip
         LEFT JOIN promociones AS p ON ip.promocion_id = p.id
         LEFT JOIN categoria_promocions AS cp ON p.id = cp.promocion_id
