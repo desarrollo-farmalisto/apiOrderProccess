@@ -43,8 +43,11 @@ class UpdateStatusOrders extends Command
 
             //primera consulta a netsuite, consultar cantidades
             $resultado_cantidad = Netsuite::get(2097, 'customsearch7007_2', 0, 1, '', 'local');
+            $dataCantidad = json_decode($resultado_cantidad, true);
+            $cantidad = $dataCantidad['count'] ?? 0;
+         
             // $resultado_cantidad = Netsuite::get(2097, 'customsearch7007_2', 0, 1);
-            if(intval($resultado_cantidad) > 0){
+            if($cantidad > 0){
 
                 //vaciar tabla
                 DB::table('inventario_netsuites')->truncate();
@@ -60,7 +63,8 @@ class UpdateStatusOrders extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    $resultado = Netsuite::get(Netsuite::resolveId(2518,2527), null, $start, $end);
+                    $resultado = Netsuite::get(2527, null, $start, $end, '', 'local');
+                    // $resultado = Netsuite::get(Netsuite::resolveId(2518,2527), null, $start, $end);
                     $data = json_decode($resultado, true);
 
                     if(isset($data['error'])){
@@ -119,6 +123,7 @@ class UpdateStatusOrders extends Command
         } catch (\Throwable $e) {
             $error = 1;
             $mensaje_error = $e->getMessage();
+            Log::info('Error al actualizar el estado de las ordenes de traslado: ' . $mensaje_error);
         }
 
         \App\Services\GenerateLogs::generateLogScheduleTask("ACTUALIZACIÓN ESTADO ORDENES", "ordenes_traslados", $error, $cantidad_busqueda, $valores_creados, $valores_actualizados, $fecha_inicio_log, $mensaje_error);

@@ -19,7 +19,7 @@ class UserSeeder extends Seeder
         User::create([
             'netsuite_id' => 1,
             'name' => 'Administrador',
-            'email' => 'brayan.rodriguez@axa.com.co',
+            'email' => 'desarrollo.it@farmalisto.com.co',
             'password' => Hash::make('123456789'),
             'password_text' => '123456789',
             'categoria' => 'ADMINISTRADOR',
