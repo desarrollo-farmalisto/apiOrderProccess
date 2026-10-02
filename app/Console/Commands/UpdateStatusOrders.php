@@ -6,6 +6,7 @@ use App\Models\OrdenesTraslado;
 use Illuminate\Console\Command;
 use App\Services\Netsuite;
 use Illuminate\Support\Facades\DB;
+use Log;
 
 class UpdateStatusOrders extends Command
 {
@@ -38,24 +39,22 @@ class UpdateStatusOrders extends Command
         $valores_actualizados = 0;
         $valores_creados = 0;
         $cantidad_busqueda = 0;
-
+        
         try {
 
-            //primera consulta a netsuite, consultar cantidades
+            // $resultado_cantidad = Netsuite::get(2097, 'customsearch7007_2', 0, 1);
             $resultado_cantidad = Netsuite::get(2097, 'customsearch7007_2', 0, 1, '', 'local');
             $dataCantidad = json_decode($resultado_cantidad, true);
             $cantidad = $dataCantidad['count'] ?? 0;
-         
-            // $resultado_cantidad = Netsuite::get(2097, 'customsearch7007_2', 0, 1);
+
             if($cantidad > 0){
 
-                //vaciar tabla
                 DB::table('inventario_netsuites')->truncate();
 
                 $start = 0;
                 $end = 0;
 
-                $cantidad_for = ceil($resultado_cantidad/1000)*1000;
+                $cantidad_for = ceil($cantidad/1000)*1000;
                 $cantidad_dividir = intval($cantidad_for / 1000);
                 for ($i=0; $i < $cantidad_dividir ; $i++) {
 
@@ -63,8 +62,8 @@ class UpdateStatusOrders extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    $resultado = Netsuite::get(2527, null, $start, $end, '', 'local');
                     // $resultado = Netsuite::get(Netsuite::resolveId(2518,2527), null, $start, $end);
+                    $resultado = Netsuite::get(2518, null, $start, $end, '', 'local');
                     $data = json_decode($resultado, true);
 
                     if(isset($data['error'])){
@@ -79,28 +78,34 @@ class UpdateStatusOrders extends Command
                             $cantidad_busqueda = $cantidad_busqueda + count($data["response"]);
                             $array_insertar = array();
 
-                            //recorrer datos
                             foreach ($data["response"] as $key => $value) {
-
                                 $numero_documento           = $value["values"]["tranid"];
                                 $estado                     = $value["values"]["statusref"][0]["text"];
 
-                                if($estado == 'Pending Approval')
+                                if($estado == 'Aprobación pendiente')
                                 {
                                     $estado = 'A';
-                                }else if($estado == 'Pending Fulfillment')
+                                }else if($estado == 'Ejecución de la orden pendiente')
                                 {
                                     $estado = 'B';
-                                }else if($estado == 'Pending Receipt')
+                                }else if($estado == 'Recepción pendiente')
                                 {
                                     $estado = 'C';
-                                }else if($estado == 'Received')
+                                }else if($estado == 'Recibida')
                                 {
                                     $estado = 'D';
-                                }
-                                else if($estado == "Pending Receipt/Partially Fulfilled")
+                                }else if($estado == 'Recepción pendiente/Parcialmente ejecutado')
                                 {
                                     $estado = 'E';
+                                }else if($estado == 'Parcialmente ejecutada')
+                                {
+                                    $estado = 'F';
+                                }else if($estado == 'Cerrada')
+                                {
+                                    $estado = 'G';
+                                }else if($estado == 'Rechazada')
+                                {
+                                    $estado = 'H';
                                 }
 
                                 $validar = OrdenesTraslado::where('numero_orden_traslado', $numero_documento)->first();

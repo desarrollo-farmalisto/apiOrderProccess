@@ -20,21 +20,14 @@ class OrdenTrasladoController extends Controller
 
         try {
             if (is_null($type)) {
-                return response()->json([
-                    'error' => 'El parámetro tipo_orden es obligatorio.',
-                    'code' => 400
-                ]);
+                return response()->json(['error' => 'El parámetro tipo_orden es obligatorio.', 'code' => 400]);
             }
+            
             $orders = OrdenesTraslado::where('tipo_orden', $type)->with('ubicacion', 'ubicacionPara', 'ubicacionAxa')->get();
+            return response()->json(['data' => $orders]);
 
-            return response()->json([
-                'data' => $orders
-            ]);
         } catch (\Throwable $th) {
-            return response()->json([
-                'data' => $th->getMessage(),
-                'type' => $type,
-            ]);
+            return response()->json(['data' => $th->getMessage(), 'type' => $type]);
         }
     }
 
@@ -73,10 +66,6 @@ class OrdenTrasladoController extends Controller
                     }
 
                     $enviar_resultado = $this->enviarNetsuite($id_orden);
-                    
-                    Log::info('netsuite');
-                    Log::info($enviar_resultado);
-
                     if ($enviar_resultado['estado']) {
                         return response()->json([
                             'error' => false,
@@ -84,29 +73,17 @@ class OrdenTrasladoController extends Controller
                             'mensaje' => $enviar_resultado['mensaje']
                         ]);
                     } else {
-                        return response()->json([
-                            'error' => true,
-                            'mensaje' => 'Error al crear el traslado en Netsuite.'
-                        ]);
+                        return response()->json(['error' => true, 'mensaje' => 'Error al crear el traslado en Netsuite.']);
                     }
                 } else {
-                    return response()->json([
-                        'error' => true,
-                        'mensaje' => 'Error al crear la orden de traslado.'
-                    ]);
+                    return response()->json(['error' => true, 'mensaje' => 'Error al crear la orden de traslado.']);
                 }
             } else {
-                return response()->json([
-                    'error' => true,
-                    'mensaje' => 'No hay productos para agregar a la orden de traslado.'
-                ]);
+                return response()->json(['error' => true, 'mensaje' => 'No hay productos para agregar a la orden de traslado.']);
             }
         } catch (\Throwable $th) {
             Log::error("error ordenes de traslado: " . $th->getMessage());
-            return response()->json([
-                'error' => true,
-                'mensaje' => $th->getMessage(),
-            ]);
+            return response()->json(['error' => true, 'mensaje' => $th->getMessage()]);
         }
     }
 
@@ -114,15 +91,10 @@ class OrdenTrasladoController extends Controller
     {
 
         $traslado = OrdenesTraslado::find($id);
-
-        //items
         $items = array();
         if (count($traslado->detalles) > 0) {
             foreach ($traslado->detalles as $key => $value) {
-                $items[] = array(
-                    "id" => $value->item_id,
-                    "cantidad" => $value->cantidad_solicitado
-                );
+                $items[] = array("id" => $value->item_id, "cantidad" => $value->cantidad_solicitado);
             }
         }
 
@@ -147,7 +119,7 @@ class OrdenTrasladoController extends Controller
         );
 
         $json = json_encode($array_json);
-        $resultado_service = Netsuite::post(2140, $json, 'local'); // sandbox
+        $resultado_service = Netsuite::post(2159, $json, 'local'); // sandbox
         // $resultado_service = Netsuite::post(2159, $json);
         $decodificado = json_decode($resultado_service, true);
 
@@ -165,7 +137,7 @@ class OrdenTrasladoController extends Controller
             $items = null;
 
             //consultar informacion del traslado
-            $resultado_consulta = Netsuite::get(2141, $id_netsuite, 0, 1, '', 'local');
+            $resultado_consulta = Netsuite::get(2160, $id_netsuite, 0, 1, '', 'local');
             // $resultado_consulta = Netsuite::get(2160, $id_netsuite, 0, 1);
             $decodificado_consulta = json_decode($resultado_consulta, true);
             if (is_array($decodificado_consulta) && isset($decodificado_consulta["message"]) && $decodificado_consulta["message"] == 'success') {
@@ -178,11 +150,8 @@ class OrdenTrasladoController extends Controller
             if ($items != null) {
                 if (count($items) > 0) {
                     foreach ($items as $key => $value) {
-                        $act_items = array(
-                            'cantidad_recibido' => $value["recibido"]
-                        );
-                        DetallesOrdenesTraslado::where("orden_traslado_id", $traslado->id)
-                            ->where('item_id', $value["id"])->update($act_items);
+                        $act_items = array('cantidad_recibido' => $value["recibido"]);
+                        $updateDetails = DetallesOrdenesTraslado::where("orden_traslado_id", $traslado->id)->where('item_id', $value["id"])->update($act_items);
                     }
                 }
             }
@@ -194,22 +163,13 @@ class OrdenTrasladoController extends Controller
                 'estado' => 2,
                 'estado_netsuite' => $estado_ns
             );
-            OrdenesTraslado::findOrFail($traslado->id)->update($actualizar);
+            $orderUpdate = OrdenesTraslado::findOrFail($traslado->id)->update($actualizar);
 
             //generar log
             $mensaje = 'CREACION ORDEN TRASLADO #' . $traslado->id . ', Mensaje: Orden de Traslado creada correctamente, generado con el ID NETSUITE #' . $id_netsuite . ' y NUMERO ORDEN #' . $num_orden;
-            $agg_info = array(
-                'tipo' => 'ORDEN TRASLADO',
-                'respuesta_id' => $traslado->id,
-                'fecha' => date('Y-m-d'),
-                'error' => 'Si',
-                'mensaje' => $mensaje
-            );
+            $agg_info = array('tipo' => 'ORDEN TRASLADO', 'respuesta_id' => $traslado->id, 'fecha' => date('Y-m-d'), 'error' => 'Si', 'mensaje' => $mensaje);
             LogsNetsuites::create($agg_info);
-            $response = array(
-                'estado' => true,
-                'mensaje' => 'Se creo la orden netsuite con exito',
-            );
+            $response = array('estado' => true, 'mensaje' => 'Se creo la orden netsuite con exito');
             return $response;
         } else {
 
@@ -229,10 +189,7 @@ class OrdenTrasladoController extends Controller
             );
             LogsNetsuites::create($agg_info);
 
-            $response = array(
-                'estado' => false,
-                'mensaje' => 'Error al crear orden de traslado',
-            );
+            $response = array('estado' => false, 'mensaje' => 'Error al crear orden de traslado');
             return $response;
         }
     }
@@ -278,9 +235,7 @@ class OrdenTrasladoController extends Controller
             ];
         });
 
-        return response()->json([
-            "data" => $retorno
-        ]);
+        return response()->json(["data" => $retorno]);
     }
 
     public function ubicacion()
@@ -289,66 +244,40 @@ class OrdenTrasladoController extends Controller
             ->where('isinactive', 0)
             ->orderBy('id')
             ->get()
-            ->map(function ($ubicacion) {
+            ->map(function ($ubicacion) { 
                 $ubicacion->label = explode(' : ', $ubicacion->label)[1] ?? '';
                 return $ubicacion;
             });
 
-        return response()->json([
-            "ubicaciones" => $ubicaciones
-        ]);
+        return response()->json(["ubicaciones" => $ubicaciones]);
     }
 
     public function ubicacionAxa()
     {
-        $ubicacionAxa = InventarioAxa::select('ubicacion', 'id_ubicacion')
-            ->distinct()
-            ->get();
-
-        return response()->json([
-            "ubicacionesaxa" => $ubicacionAxa
-        ]);
+        $ubicacionAxa = InventarioAxa::select('ubicacion', 'id_ubicacion')->distinct()->get();
+        return response()->json(["ubicacionesaxa" => $ubicacionAxa]);
     }
 
     public function Productosaxa($id)
     {
-        $productoAxa =  DB::select("SELECT
-                                    DISTINCT i.producto_netsuite_id ,
-                                    i.producto ,
-                                    i.ean,
-                                    i.disponible
-
-                                 FROM  inventario_axas i
-                                    WHERE i.id_ubicacion =  $id;");
-
+        $productoAxa =  DB::select("SELECT DISTINCT i.producto_netsuite_id, i.producto, i.ean, i.disponible FROM  inventario_axas i WHERE i.id_ubicacion =  $id;");
         $retornar = collect($productoAxa)->map(function ($value) {
             return [
                 'id' => $value->producto_netsuite_id,
                 'product_id' => $value->producto_netsuite_id,
                 'producto' => $value->producto,
                 'ean' => $value->ean,
-                // 'linea' => $value->linea,
-                // //'embalaje' => $value->embalaje,
-                // 'tipo' => $value->tipo,
-                // 'es_lote' => $value->es_lote,
                 'inventario' => $value->disponible ?? 0,
-                // 'precio_unitario' => "$" . number_format($value->precio_venta, 0, ",", "."),
-                // 'precio_unitario_calculable' => $value->precio_venta,
-                //  'iva' => $value->iva,
-                //  'precio' => "$" . number_format($value->precion_con_iva, 0, ",", "."),
                 'precio_calculable' => 0
             ];
         });
 
-        return response()->json([
-            'data' => $retornar
-        ]);
+        return response()->json(['data' => $retornar]);
     }
     public function ubicacionesConInventario($producto_id, $tipo)
     {
         try {
             if ($tipo == 'BODEGA') {
-                //dd($producto_id);
                 $ubicaciones = DB::select("
                 SELECT DISTINCT u.netsuite_id AS value,
                 u.nombre AS label, i.disponible
@@ -358,9 +287,6 @@ class OrdenTrasladoController extends Controller
                 AND i.disponible > 0
                 AND u.isinactive = 0
                 ", [$producto_id]);
-                ///dd($ubicaciones);
-
-
             } else {
                 $ubicaciones = DB::select("
                 SELECT DISTINCT i.id_ubicacion AS value,
@@ -369,31 +295,11 @@ class OrdenTrasladoController extends Controller
                 WHERE i.producto_netsuite_id = ?
                 AND i.disponible > 0
                 ", [$producto_id]);
-                ///dd($ubicaciones);
-
             }
-            return response()->json([
-                "ubicaciones" => $ubicaciones,
-                "producto_id" => $producto_id
-            ]);
-            // $formattedUbicaciones = collect($ubicaciones)->map(function ($ubicacion) {
-            //     return [
-            //         'label' => explode(' : ', $ubicacion->label)[1] ?? '',
-            //         'value' => $ubicacion->value,
-            //         'inventario' => $ubicacion->inventario,
-            //         'faltante' => $ubicacion->faltante
-            //     ];
-            // });
 
-            // return response()->json([
-            //     "ubicaciones" => $formattedUbicaciones,
-            //     "producto_id" => $producto_id
-            // ]);
+            return response()->json(["ubicaciones" => $ubicaciones, "producto_id" => $producto_id]);
         } catch (\Throwable $th) {
-            return response()->json([
-                'error' => true,
-                'mensaje' => $th->getMessage(),
-            ]);
+            return response()->json(['error' => true, 'mensaje' => $th->getMessage()]);
         }
     }
 
@@ -404,8 +310,6 @@ class OrdenTrasladoController extends Controller
             if (is_array($productos) && count($productos) > 0) {
 
                 $productos_por_ubicacion = [];
-
-
                 foreach ($productos as $producto) {
                     $ubicacion = $producto['desde_ubicacion'] ?? $request->desde_ubicacion;
                     if (!isset($productos_por_ubicacion[$ubicacion])) {
@@ -417,13 +321,7 @@ class OrdenTrasladoController extends Controller
                 $resultados = [];
                 $cantidad = count($productos_por_ubicacion);
 
-
-
                 foreach ($productos_por_ubicacion as $ubicacion => $productos_ubicacion) {
-                    /* return response()->json([
-                        'error' => true,
-                        'mensaje' => $ubicacion,
-                    ]); */
                     $insertar = [
                         'tipo_orden' => $request->tipo_orden,
                         'canal' => $request->canal,
@@ -438,13 +336,9 @@ class OrdenTrasladoController extends Controller
                     ];
 
                     if ($result = OrdenesTraslado::create($insertar)) {
+                        
                         $id_orden = $result->id;
-
                         foreach ($productos_ubicacion as $producto) {
-                            /* return response()->json([
-                                'error' => true,
-                                'mensaje' => $producto,
-                            ]); */
                             $detalle = [
                                 'orden_traslado_id' => $id_orden,
                                 'item_id' => $producto['producto_id'],
@@ -463,18 +357,12 @@ class OrdenTrasladoController extends Controller
                             'mensaje' => $enviar_resultado['mensaje']
                         ];
                     } else {
-                        return response()->json([
-                            'error' => true,
-                            'mensaje' => 'Error al crear la orden de traslado para la ubicación ' . $ubicacion
-                        ]);
+                        return response()->json(['error' => true, 'mensaje' => 'Error al crear la orden de traslado para la ubicación ' . $ubicacion]);
                     }
                 }
 
                 // Verificar si todas las órdenes se crearon correctamente
-                $errores = array_filter($resultados, function ($r) {
-                    return !$r['estado'];
-                });
-
+                $errores = array_filter($resultados, function ($r) { return !$r['estado']; });
                 if (empty($errores)) {
                     return response()->json([
                         'error' => false,
@@ -489,17 +377,11 @@ class OrdenTrasladoController extends Controller
                     ]);
                 }
             } else {
-                return response()->json([
-                    'error' => true,
-                    'mensaje' => 'No hay productos para agregar a la orden de traslado.'
-                ]);
+                return response()->json(['error' => true, 'mensaje' => 'No hay productos para agregar a la orden de traslado.']);
             }
+
         } catch (\Throwable $th) {
-            return response()->json([
-                'error' => true,
-                'mensaje' => $th->getMessage(),
-                'linea' => $th->getLine(),
-            ]);
+            return response()->json(['error' => true, 'mensaje' => $th->getMessage(), 'linea' => $th->getLine()]);
         }
     }
 }
