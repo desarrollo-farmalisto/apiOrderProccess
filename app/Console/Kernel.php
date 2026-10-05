@@ -33,6 +33,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('extraccion:inventarioAxa')->cron('0 3,20 * * *');
         $schedule->command('Actualizacion_estado_ordenes')->cron('*/3 * * * *');
         $schedule->command('app:envio-ordenes')->weeklyOn(1, '8:00');
+        $schedule->command('extraccion:clean-netsuite-logs')->monthlyOn(1, '06:00');
     }
 
     /**

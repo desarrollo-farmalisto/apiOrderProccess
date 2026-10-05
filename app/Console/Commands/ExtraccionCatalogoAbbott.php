@@ -56,9 +56,9 @@ class ExtraccionCatalogoAbbott extends Command
         
         try {
 
-            // $resultado_cantidad = Netsuite::get(2097, $busqueda_guardada, 0, 1, '', 'local');
+            // $cantidad_busqueda = Netsuite::get(2097, $busqueda_guardada, 0, 1, '', 'local');
             $cantidad_busqueda = Netsuite::get(2097, $busqueda_guardada, 0, 1);
-            \Log::info('CatalogoAbbott conteo raw: ' . $resultado_cantidad);
+            \Log::info('CatalogoAbbott conteo raw: ' . $cantidad_busqueda);
             $resultado_cantidad_decoded = json_decode($resultado_cantidad, true);
             $cantidad_busqueda = is_array($resultado_cantidad_decoded) ? ($resultado_cantidad_decoded['count'] ?? intval($resultado_cantidad)) : intval($resultado_cantidad);
             
