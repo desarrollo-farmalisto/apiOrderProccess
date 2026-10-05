@@ -36,7 +36,6 @@ class ExtraccionPromociones extends Command
         $error = 0;
         $mensaje_error = '';
 
-        //establecer variables
         $fecha_inicio_log = Date('Y-m-d\TH:i:s');
         $valores_actualizados = 0;
         $valores_creados = 0;
@@ -44,12 +43,12 @@ class ExtraccionPromociones extends Command
 
         try {
 
-            //primera consulta a netsuite, consultar cantidades
-            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_promotions_tp_galen', 0, 1);
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_promotions_tp_galen', 0, 1, '', 'local');
+            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_promotions_tp_galen', 0, 1, '', 'local');
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_promotions_tp_galen', 0, 1);
             \Log::info('Promociones resultado_cantidad raw: ' . $resultado_cantidad);
             $resultado_cantidad_decoded = json_decode($resultado_cantidad, true);
             $cantidad = is_array($resultado_cantidad_decoded) ? ($resultado_cantidad_decoded['count'] ?? intval($resultado_cantidad)) : intval($resultado_cantidad);
+            
             if($cantidad > 0){
 
                 $start = 0;
@@ -63,10 +62,11 @@ class ExtraccionPromociones extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    // $resultado = Netsuite::get(2177, null, $start, $end);
-                    $resultado = Netsuite::get(2177, null, $start, $end, '', 'local');
+                    // $resultado = Netsuite::get(2177, null, $start, $end, '', 'local');
+                    $resultado = Netsuite::get(2177, null, $start, $end);
                     \Log::info('Promociones 2177 raw [' . $start . '-' . $end . ']: ' . substr($resultado, 0, 500));
                     $data = json_decode($resultado, true);
+                    
                     if(isset($data['error'])){
                         $error = 1;
                         $mensaje_error = json_encode($data);
@@ -79,7 +79,6 @@ class ExtraccionPromociones extends Command
                             $cantidad_busqueda = $cantidad_busqueda + count($data["response"]);
                             $id_prmociones = array();
 
-                            //recorrer datos
                             foreach ($data["response"] as $key => $value) {
 
                                 $netsuite_id                    = $value["values"]["MAX(internalid)"];
@@ -156,14 +155,10 @@ class ExtraccionPromociones extends Command
                                         }
                                     }
                                 }
-
                             }
-
-                            //inactivar las promociones que no vienen en la busqueda guarda
                             Promociones::whereNotIn('id', $id_prmociones)->update(array('isinactive' => 1));
                         }
                     }
-
                 }
 
                 $promociones_activas = Promociones::where('isinactive', 0)->get();
@@ -172,24 +167,22 @@ class ExtraccionPromociones extends Command
                         $this->ejecutarItemsPromociones($val_promocion);
                     }
                 }
-
             }
-
         } catch (\Throwable $e) {
             $error = 1;
             $mensaje_error = $e->getMessage();
         }
 
-        //por ultimo, generamos log
         GenerateLogs::generateLogScheduleTask("EXTRACCION PROMOCIONES", "promociones", $error, $cantidad_busqueda, $valores_creados, $valores_actualizados, $fecha_inicio_log, $mensaje_error);
     }
 
     private function ejecutarItemsPromociones($promocion)
     {
-        // $result_cant = Netsuite::get(2097, $promocion->id_busqueda_items, 0, 1);
-        $result_cant = Netsuite::get(2097, $promocion->id_busqueda_items, 0, 1, '', 'local');
+        // $result_cant = Netsuite::get(2097, $promocion->id_busqueda_items, 0, 1, '', 'local');
+        $result_cant = Netsuite::get(2097, $promocion->id_busqueda_items, 0, 1);
         $result_cant_decoded = json_decode($result_cant, true);
         $cant = is_array($result_cant_decoded) ? ($result_cant_decoded['count'] ?? intval($result_cant)) : intval($result_cant);
+        
         if($cant > 0){
 
             ItemsPromociones::where('promocion_id', $promocion->id)->delete();
@@ -205,12 +198,10 @@ class ExtraccionPromociones extends Command
                 $end_prom = $end_prom + 1000;
                 $start_prom= str_pad($start_prom, mb_strlen($end_prom), "0", STR_PAD_LEFT);
 
-                //consultar a netsuite
-                // $resultado_prom = Netsuite::get(2178, $promocion->id_busqueda_items, $start_prom, $end_prom);
-                $resultado_prom = Netsuite::get(2178, $promocion->id_busqueda_items, $start_prom, $end_prom, '', 'local');
+                // $resultado_prom = Netsuite::get(2178, $promocion->id_busqueda_items, $start_prom, $end_prom, '', 'local');
+                $resultado_prom = Netsuite::get(2178, $promocion->id_busqueda_items, $start_prom, $end_prom);
                 $data_prom = json_decode($resultado_prom, true);
 
-                //recorrer datos
                 foreach ($data_prom as $key => $value) {
 
                     $act_items = array(
@@ -220,7 +211,6 @@ class ExtraccionPromociones extends Command
                         'producto' => $value["values"]["itemid"]
                     );
                     ItemsPromociones::create($act_items);
-
                 }
             }
         }

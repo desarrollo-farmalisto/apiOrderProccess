@@ -43,11 +43,9 @@ class ExtraccionCatalogoAbbott extends Command
      */
     public function handle()
     {
-        //Busqueda DB INTEGRACION ECOMERX | CATALOGO ABBOTT PRODUCTOS
         $error = 0;
         $mensaje_error = '';
 
-        //establecer variables
         $busqueda_guardada = "customsearch_db_int_ecox_catalogo_prod_2"; //produccion
 
         $program = IntegracionProveedor::where('nombre','ABBOTT')->first();        
@@ -58,20 +56,15 @@ class ExtraccionCatalogoAbbott extends Command
         
         try {
 
-            //primera consulta a netsuite, consultar cantidades
-            // $cantidad_busqueda = Netsuite::get(2097, $busqueda_guardada, 0, 1);
-            $resultado_cantidad = Netsuite::get(2097, $busqueda_guardada, 0, 1, '', 'local');
+            // $resultado_cantidad = Netsuite::get(2097, $busqueda_guardada, 0, 1, '', 'local');
+            $cantidad_busqueda = Netsuite::get(2097, $busqueda_guardada, 0, 1);
             \Log::info('CatalogoAbbott conteo raw: ' . $resultado_cantidad);
             $resultado_cantidad_decoded = json_decode($resultado_cantidad, true);
             $cantidad_busqueda = is_array($resultado_cantidad_decoded) ? ($resultado_cantidad_decoded['count'] ?? intval($resultado_cantidad)) : intval($resultado_cantidad);
             
             if(intval($cantidad_busqueda) > 0){
                 
-                //vaciar tabla
-                DB::table('producto_integracions')
-                    ->where('integracion_id', $program->id)
-                    ->delete();
-                
+                DB::table('producto_integracions')->where('integracion_id', $program->id)->delete();
                 $start = 0; $end = 0;
 
                 $cantidad_for = ceil($cantidad_busqueda/1000)*1000;
@@ -82,8 +75,8 @@ class ExtraccionCatalogoAbbott extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
                     
-                    // $resultado = Netsuite::get(2442, null, $start, $end); //produccion
-                    $resultado = Netsuite::get(2442, null, $start, $end, '', 'local');
+                    // $resultado = Netsuite::get(2442, null, $start, $end, '', 'local');
+                    $resultado = Netsuite::get(2442, null, $start, $end); //produccion
                     
                     $data = json_decode($resultado, true);
                     if(isset($data['error'])){
@@ -115,25 +108,21 @@ class ExtraccionCatalogoAbbott extends Command
                                 }         
                             }        
                                             
-                            // Insertar nuevos clientes
                             if (!empty($insertar)) {
                                 ProductoIntegracion::insert($insertar);
                             }                                                            
                         }
                     }
                 }
-
             } else {
                 $error = 1;
                 $mensaje_error = 'Se presento un error al consultar la busqueda "'.$busqueda_guardada.'"! No se pudo extraer nada. Error: ' . json_encode($cantidad_busqueda);
             }
-
         } catch (\Throwable $th) {
             $error = 1;
             $mensaje_error = $th;
         }
 
-        //por ultimo, generamos log
         GenerateLogs::generateLogScheduleTask("ACTUALIZACIÓN PRODUCTOS ABBOTT", "producto_integracions", $error, $cantidad_busqueda, $valores_creados, $valores_actualizados, $fecha_inicio_log, $mensaje_error);
     }
 }

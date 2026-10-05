@@ -33,7 +33,6 @@ class ExtraccionKits extends Command
         $error = 0;
         $mensaje_error = '';
 
-        //establecer variables
         $fecha_inicio_log = Date('Y-m-d\TH:i:s');
         $valores_actualizados = 0;
         $valores_creados = 0;
@@ -41,12 +40,12 @@ class ExtraccionKits extends Command
 
         try {
 
-            //primera consulta a netsuite, consultar cantidades
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_tp_kits_galenica', 0, 1, '', 'local');
+            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_tp_kits_galenica', 0, 1, '', 'local');
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_tp_kits_galenica', 0, 1);
             \Log::info('Catalogo resultado_cantidad raw: ' . $resultado_cantidad);
             $resultado_cantidad_decoded = json_decode($resultado_cantidad, true);
             $cantidad = is_array($resultado_cantidad_decoded) ? ($resultado_cantidad_decoded['count'] ?? intval($resultado_cantidad)) : intval($resultado_cantidad);
-            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_tp_kits_galenica', 0, 1);
+
             if($cantidad > 0){
 
                 $start = 0;
@@ -54,15 +53,18 @@ class ExtraccionKits extends Command
 
                 $cantidad_for = ceil($cantidad/1000)*1000;
                 $cantidad_dividir = intval($cantidad_for / 1000);
+
                 for ($i=0; $i < $cantidad_dividir ; $i++) {
 
                     $start = ($i == 0) ? 0 : $start + 1000;
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    $resultado = Netsuite::get(2176, null, $start, $end, '', 'local');
+                    // $resultado = Netsuite::get(2176, null, $start, $end, '', 'local');
+                    $resultado = Netsuite::get(2176, null, $start, $end);
                     \Log::info('kits 2175 raw [' . $start . '-' . $end . ']: ' . substr($resultado, 0, 500));
                     $data = json_decode($resultado, true);
+                    
                     if(isset($data['error'])){
                         $error = 1;
                         $mensaje_error = json_encode($data);
@@ -76,7 +78,6 @@ class ExtraccionKits extends Command
                             $array_crear = array();
                             $array_actualizar = array();
 
-                            //recorrer datos
                             foreach ($data["response"] as $key => $value) {
 
                                 $netsuite_id                = $value["id"];
@@ -91,7 +92,6 @@ class ExtraccionKits extends Command
                                 $cantidad_regalo            = intval($value["values"]["custitem_axa_q_obsequio_oferta_pjcl"]);
                                 $isinactive                 = $value["values"]["isinactive"];
 
-                                //validar
                                 $isinactive = ($isinactive == false) ? 0 : 1;
 
                                 $sql_validar = Kit::select('id')->where('netsuite_id', $netsuite_id)->get();
@@ -131,12 +131,10 @@ class ExtraccionKits extends Command
 
                             }
 
-                            //validamos si existe para crear
                             if(count($array_crear) > 0){
                                 Kit::insert($array_crear);
                             }
 
-                            //validamos si existe para actualizar
                             if(count($array_actualizar) > 0){
                                 Kit::massUpdate(
                                     values: $array_actualizar,
@@ -157,7 +155,6 @@ class ExtraccionKits extends Command
             $mensaje_error = $e;
         }
 
-        //por ultimo, generamos log
         GenerateLogs::generateLogScheduleTask("EXTRACCION KITS", "kits", $error, $cantidad_busqueda, $valores_creados, $valores_actualizados, $fecha_inicio_log, $mensaje_error);
     }
 }

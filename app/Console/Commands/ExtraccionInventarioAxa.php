@@ -43,11 +43,12 @@ class ExtraccionInventarioAxa extends Command
 
         try {
 
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_invent_galenica_t_2', 0, 1, '', 'local');
-            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_invent_galenica_t_2', 0, 1);
+            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_invent_galenica_t_2', 0, 1, '', 'local');
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_invent_galenica_t_2', 0, 1);
             \Log::info('InventarioAxa resultado_cantidad raw: ' . $resultado_cantidad);
             $resultado_cantidad_decoded = json_decode($resultado_cantidad, true);
             $cantidad = is_array($resultado_cantidad_decoded) ? ($resultado_cantidad_decoded['count'] ?? intval($resultado_cantidad)) : intval($resultado_cantidad);
+            
             if($cantidad > 0){
 
                 DB::table('inventario_axas')->truncate();
@@ -62,8 +63,8 @@ class ExtraccionInventarioAxa extends Command
                     $start = $i * 1000;
                     $end = $start + 1000;
 
-                    // $resultado = Netsuite::get(Netsuite::resolveId(7217, 2517), null, $start, $end);
-                    $resultado = Netsuite::get(2517, null, $start, $end, '', 'local');
+                    // $resultado = Netsuite::get(2517, null, $start, $end, '', 'local');
+                    $resultado = Netsuite::get(2517, null, $start, $end);
                     $data = json_decode($resultado, true);
 
                     if(isset($data['error'])){
@@ -103,16 +104,13 @@ class ExtraccionInventarioAxa extends Command
 
                             }
                             InventarioAxa::insert($array_insertar);
-
                         }
                     }
                 }
-
             } else {
                 $error = 1;
                 $mensaje_error = 'Se presento un error al consultar la busqueda! No se pudo extraer nada.';
             }
-
         } catch (Exception $e) {
             Log::info("Error: ". $e->getMessage());
         }

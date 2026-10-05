@@ -35,7 +35,6 @@ class ExtraccionDetallesInventarios extends Command
         $error = 0;
         $mensaje_error = '';
 
-        //establecer variables
         $fecha_inicio_log = Date('Y-m-d\TH:i:s');
         $valores_actualizados = 0;
         $valores_creados = 0;
@@ -43,8 +42,8 @@ class ExtraccionDetallesInventarios extends Command
 
         try {
 
-            //primera consulta a netsuite, consultar cantidades
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_detalle_invt_tp_gal', 0, 1, 'InventoryBalance', 'local');
+            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_detalle_invt_tp_gal', 0, 1, 'InventoryBalance', 'local');
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_detalle_invt_tp_gal', 0, 1, 'InventoryBalance');
             \Log::info('DetallesInventarios resultado_cantidad raw: ' . $resultado_cantidad);
             $resultado_cantidad_decoded = json_decode($resultado_cantidad, true);
             $cantidad = is_array($resultado_cantidad_decoded) ? ($resultado_cantidad_decoded['count'] ?? intval($resultado_cantidad)) : intval($resultado_cantidad);
@@ -64,8 +63,8 @@ class ExtraccionDetallesInventarios extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    // $resultado = Netsuite::get(2181, null, $start, $end);
-                    $resultado = Netsuite::get(2181, null, $start, $end, '', 'local');
+                    // $resultado = Netsuite::get(2181, null, $start, $end, '', 'local');
+                    $resultado = Netsuite::get(2181, null, $start, $end);
                     $data = json_decode($resultado, true);
                     if(isset($data['error'])){
                         $error = 1;
@@ -78,9 +77,7 @@ class ExtraccionDetallesInventarios extends Command
 
                             $cantidad_busqueda = $cantidad_busqueda + count($data["response"]);
                             $array_crear = array();
-                            //$array_actualizar = array();
 
-                            //recorrer datos
                             foreach ($data["response"] as $key => $value) {
 
                                 $item_id                                = $value["values"]["item.internalid"][0]["text"];
@@ -120,7 +117,6 @@ class ExtraccionDetallesInventarios extends Command
 
                             }
 
-                            //validamos si existe para crear o actualizar
                             if(count($array_crear) > 0){
                                 DetallesInventarios::insert($array_crear);
                             }
@@ -137,7 +133,6 @@ class ExtraccionDetallesInventarios extends Command
             $mensaje_error = $e->getMessage();
         }
 
-        //por ultimo, generamos log
         GenerateLogs::generateLogScheduleTask("EXTRACCION DETALLE INVENTARIO", "detalles_inventarios", $error, $cantidad_busqueda, $cantidad_busqueda, $valores_actualizados, $fecha_inicio_log, $mensaje_error);
     }
 }

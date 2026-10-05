@@ -34,7 +34,6 @@ class ExtraccionInventario extends Command
         $error = 0;
         $mensaje_error = '';
 
-        //establecer variables
         $fecha_inicio_log = Date('Y-m-d\TH:i:s');
         $valores_actualizados = 0;
         $valores_creados = 0;
@@ -42,15 +41,14 @@ class ExtraccionInventario extends Command
 
         try {
 
-            //primera consulta a netsuite, consultar cantidades
-            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_invent_galenica_tp', 0, 1);
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_invent_galenica_tp', 0, 1, '', 'local');
+            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_invent_galenica_tp', 0, 1, '', 'local');
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_invent_galenica_tp', 0, 1);
             \Log::info('Inventario resultado_cantidad raw: ' . $resultado_cantidad);
             $resultado_cantidad_decoded = json_decode($resultado_cantidad, true);
             $cantidad = is_array($resultado_cantidad_decoded) ? ($resultado_cantidad_decoded['count'] ?? intval($resultado_cantidad)) : intval($resultado_cantidad);
+            
             if($cantidad > 0){
 
-                //vaciar tabla
                 DB::table('inventario_netsuites')->truncate();
 
                 $start = 0;
@@ -64,10 +62,11 @@ class ExtraccionInventario extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
               
-                    // $resultado = Netsuite::get(Netsuite::resolveId(2173,2173), null, $start, $end);
-                    $resultado = Netsuite::get(2173, null, $start, $end, '', 'local');
+                    // $resultado = Netsuite::get(2173, null, $start, $end, '', 'local');
+                    $resultado = Netsuite::get(2173, null, $start, $end);
                     \Log::info('Inventario 2173 raw [' . $start . '-' . $end . ']: ' . substr($resultado, 0, 500));
                     $data = json_decode($resultado, true);
+                    
                     if(isset($data['error'])){
                         $error = 1;
                         $mensaje_error = json_encode($data);
@@ -103,27 +102,19 @@ class ExtraccionInventario extends Command
                                     'es_producto_numerado_por_lote' => $es_lote,
                                     'created_at' => Date('Y-m-d\TH:i:s')
                                 );
-
                             }
 
-                            //insertar en la tabla
                             InventarioNetsuite::insert($array_insertar);
-
                         }
                     }
                 }
 
-                //validar informacion
                 $consulta_2 = InventarioNetsuite::select('id')->count();
                 $validar_consulta_2 = $consulta_2 - $cantidad_busqueda;
                 if($validar_consulta_2 <= 100){
-
-                    //actualizar la tabla principal
                     DB::table('inventarios')->truncate();
                     DB::select("INSERT INTO inventarios SELECT * FROM inventario_netsuites");
-
                 }
-
             } else {
                 $error = 1;
                 $mensaje_error = 'Se presento un error al consultar la busqueda! No se pudo extraer nada.';
@@ -134,7 +125,6 @@ class ExtraccionInventario extends Command
             $mensaje_error = $e->getMessage();
         }
 
-        //por ultimo, generamos log
         GenerateLogs::generateLogScheduleTask("EXTRACCION INVENTARIO", "inventario", $error, $cantidad_busqueda, $valores_creados, $valores_actualizados, $fecha_inicio_log, $mensaje_error);
     }
 }

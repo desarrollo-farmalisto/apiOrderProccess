@@ -33,7 +33,6 @@ class ExtraccionListasPrecios extends Command
         $error = 0;
         $mensaje_error = '';
 
-        //establecer variables
         $fecha_inicio_log = Date('Y-m-d\TH:i:s');
         $valores_actualizados = 0;
         $valores_creados = 0;
@@ -41,12 +40,12 @@ class ExtraccionListasPrecios extends Command
 
         try {
 
-            //primera consulta a netsuite, consultar cantidades
-            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_level_price_bi', 0, 1, 'pricing');
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_level_price_bi', 0, 1, 'pricing', 'local');
+            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_level_price_bi', 0, 1, 'pricing', 'local');
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_level_price_bi', 0, 1, 'pricing');
             \Log::info('ListaPrecios resultado_cantidad raw: ' . $resultado_cantidad);
             $resultado_cantidad_decoded = json_decode($resultado_cantidad, true);
             $cantidad = is_array($resultado_cantidad_decoded) ? ($resultado_cantidad_decoded['count'] ?? intval($resultado_cantidad)) : intval($resultado_cantidad);
+            
             if($cantidad > 0){
 
                 $start = 0;
@@ -54,16 +53,18 @@ class ExtraccionListasPrecios extends Command
 
                 $cantidad_for = ceil($cantidad/1000)*1000;
                 $cantidad_dividir = intval($cantidad_for / 1000);
+                
                 for ($i=0; $i < $cantidad_dividir ; $i++) {
 
                     $start = ($i == 0) ? 0 : $start + 1000;
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    // $resultado = Netsuite::get(2171, null, $start, $end);
-                    $resultado = Netsuite::get(2171, null, $start, $end, '', 'local');
+                    // $resultado = Netsuite::get(2171, null, $start, $end, '', 'local');
+                    $resultado = Netsuite::get(2171, null, $start, $end);
                     \Log::info('ListaPrecios 2171 raw [' . $start . '-' . $end . ']: ' . substr($resultado, 0, 500));
                     $data = json_decode($resultado, true);
+                    
                     if(isset($data['error'])){
                         $error = 1;
                         $mensaje_error = json_encode($data);
@@ -77,7 +78,6 @@ class ExtraccionListasPrecios extends Command
                             $array_crear = array();
                             $array_actualizar = array();
 
-                            //recorrer datos
                             foreach ($data["response"] as $key => $value) {
 
                                 $netsuite_id                = $value["values"]["GROUP(internalid)"][0]["text"];
@@ -104,19 +104,16 @@ class ExtraccionListasPrecios extends Command
 
                             }
 
-                            //validamos si existe para crear
                             if(count($array_crear) > 0){
                                 ListaPrecio::insert($array_crear);
                             }
 
-                            //validamos si existe para actualizar
                             if(count($array_actualizar) > 0){
                                 ListaPrecio::massUpdate(
                                     values: $array_actualizar,
                                     uniqueBy: ['netsuite_id']
                                 );
                             }
-
                         }
                     }
                 }
@@ -124,13 +121,11 @@ class ExtraccionListasPrecios extends Command
                 $error = 1;
                 $mensaje_error = 'Se presento un error al consultar la busqueda! No se pudo extraer nada.';
             }
-
         } catch (\Throwable $e) {
             $error = 1;
             $mensaje_error = $e->getMessage();
         }
 
-        //por ultimo, generamos log
         GenerateLogs::generateLogScheduleTask("EXTRACCION LISTAS DE PRECIO", "lista_precios", $error, $cantidad_busqueda, $valores_creados, $valores_actualizados, $fecha_inicio_log, $mensaje_error);
     }
 }

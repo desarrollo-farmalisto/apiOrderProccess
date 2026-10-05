@@ -33,7 +33,6 @@ class ExtraccionUbicaciones extends Command
         $error = 0;
         $mensaje_error = '';
 
-        //establecer variables
         $fecha_inicio_log = Date('Y-m-d\TH:i:s');
         $valores_actualizados = 0;
         $valores_creados = 0;
@@ -41,9 +40,8 @@ class ExtraccionUbicaciones extends Command
 
         try {
 
-            //primera consulta a netsuite, consultar cantidades
-            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_bodegas_gal', 0, 1);
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_bodegas_gal', 0, 1, '', 'local');
+            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_bodegas_gal', 0, 1, '', 'local');
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_ecomerx_bodegas_gal', 0, 1);
             $resultado_cantidad_decoded = json_decode($resultado_cantidad, true);
             $cantidad = isset($resultado_cantidad_decoded['count']) ? intval($resultado_cantidad_decoded['count']) : intval($resultado_cantidad);
 
@@ -60,10 +58,11 @@ class ExtraccionUbicaciones extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    // $resultado = Netsuite::get(2166, null, $start, $end);
-                    $resultado = Netsuite::get(2166, null, $start, $end, '', 'local');
-                    // \Log::info('Ubicaciones 2166 raw [' . $start . '-' . $end . ']: ' . substr($resultado, 0, 500));
+                    // $resultado = Netsuite::get(2166, null, $start, $end, '', 'local');
+                    $resultado = Netsuite::get(2166, null, $start, $end);
+                    \Log::info('Ubicaciones 2166 raw [' . $start . '-' . $end . ']: ' . substr($resultado, 0, 500));
                     $data = json_decode($resultado, true);
+                    
                     if(isset($data['error'])){
                         $error = 1;
                         $mensaje_error = json_encode($data);
@@ -77,7 +76,6 @@ class ExtraccionUbicaciones extends Command
                             $array_crear = array();
                             $array_actualizar = array();
 
-                            //recorrer datos
                             foreach ($data["response"] as $key => $value) {
 
                                 $netsuite_id                = $value["id"];
@@ -87,11 +85,10 @@ class ExtraccionUbicaciones extends Command
                                 //$agrupador                = $value["values"]["name"];
                                 $isinactive                 = $value["values"]["isinactive"];
 
-                                //validar
                                 $isinactive = ($isinactive == false) ? 0 : 1;
-
                                 $sql_validar = Ubicacion::select('id')->where('netsuite_id', $netsuite_id)->get();
-                                if(count($sql_validar) > 0){
+                                
+                                if(count($sql_validar) > 0) {
                                     $array_actualizar[] = array(
                                         'netsuite_id' => $netsuite_id,
                                         'nombre' => $nombre,
@@ -112,22 +109,18 @@ class ExtraccionUbicaciones extends Command
                                     );
                                     $valores_creados++;
                                 }
-
                             }
 
-                            //validamos si existe para crear
                             if(count($array_crear) > 0){
                                 Ubicacion::insert($array_crear);
                             }
 
-                            //validamos si existe para actualizar
                             if(count($array_actualizar) > 0){
                                 Ubicacion::massUpdate(
                                     values: $array_actualizar,
                                     uniqueBy: ['netsuite_id']
                                 );
                             }
-
                         }
                     }
                 }
@@ -141,7 +134,6 @@ class ExtraccionUbicaciones extends Command
             $mensaje_error = $e->getMessage();
         }
 
-        //por ultimo, generamos log
         GenerateLogs::generateLogScheduleTask("EXTRACCION UBICACIONES", "ubicaciones", $error, $cantidad_busqueda, $valores_creados, $valores_actualizados, $fecha_inicio_log, $mensaje_error);
     }
 }

@@ -33,7 +33,6 @@ class ExtraccionDireccionesClientes extends Command
         $error = 0;
         $mensaje_error = '';
 
-        //establecer variables
         $fecha_inicio_log = Date('Y-m-d\TH:i:s');
         $valores_actualizados = 0;
         $valores_creados = 0;
@@ -41,12 +40,12 @@ class ExtraccionDireccionesClientes extends Command
 
         try {
 
-            //primera consulta a netsuite, consultar cantidades
-            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_galenica_direccion_cliente', 0, 1);
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch_galenica_direccion_cliente', 0, 1, '', 'local');
+            // $resultado_cantidad = Netsuite::get(2097, 'customsearch_galenica_direccion_cliente', 0, 1, '', 'local');
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch_galenica_direccion_cliente', 0, 1);
             \Illuminate\Support\Facades\Log::info('Direcciones sandbox - resultado_cantidad raw: ' . $resultado_cantidad);
             $resultado_cantidad_decoded = json_decode($resultado_cantidad, true);
             $cantidad = is_array($resultado_cantidad_decoded) ? ($resultado_cantidad_decoded['count'] ?? intval($resultado_cantidad)) : intval($resultado_cantidad);
+            
             if($cantidad > 0){
 
                 $start = 0;
@@ -60,10 +59,11 @@ class ExtraccionDireccionesClientes extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    // $resultado = Netsuite::get(2170, null, $start, $end);
-                    $resultado = Netsuite::get(2170, null, $start, $end, '', 'local');
+                    // $resultado = Netsuite::get(2170, null, $start, $end, '', 'local');
+                    $resultado = Netsuite::get(2170, null, $start, $end);
                     \Illuminate\Support\Facades\Log::info('Direcciones 2170 raw: ' . substr($resultado, 0, 500));
                     $data = json_decode($resultado, true);
+                    
                     if(isset($data['error'])){
                         $error = 1;
                         $mensaje_error = json_encode($data);
@@ -77,7 +77,6 @@ class ExtraccionDireccionesClientes extends Command
                             $array_crear = array();
                             $array_actualizar = array();
 
-                            //recorrer datos
                             foreach ($data["response"] as $key => $value) {
 
                                 $cliente_netsuite_id                = $value["id"];
@@ -91,13 +90,11 @@ class ExtraccionDireccionesClientes extends Command
                                 $ciudad                             = $value["values"]["city"];
                                 $isinactive                         = $value["values"]["isinactive"];
 
-                                //validar
                                 $isinactive = ($isinactive == false) ? 0 : 1;
-
                                 $sql_validar = DireccionesCliente::select('id')->where('netsuite_id', $netsuite_id)->get();
+
                                 if(count($sql_validar) > 0){
 
-                                    //actualiza
                                     $array_actualizar[] = array(
                                         'cliente_netsuite_id' => $cliente_netsuite_id,
                                         'netsuite_id' => $netsuite_id,
@@ -112,10 +109,7 @@ class ExtraccionDireccionesClientes extends Command
                                         'updated_at' => Date('Y-m-d\TH:i:s')
                                     );
                                     $valores_actualizados++;
-
                                 } else {
-
-                                    //crea
                                     $array_crear[] = array(
                                         'cliente_netsuite_id' => $cliente_netsuite_id,
                                         'netsuite_id' => $netsuite_id,
@@ -132,15 +126,12 @@ class ExtraccionDireccionesClientes extends Command
                                     $valores_creados++;
 
                                 }
-
                             }
 
-                            //validamos si existe para crear
                             if(count($array_crear) > 0){
                                 DireccionesCliente::insert($array_crear);
                             }
 
-                            //validamos si existe para actualizar
                             if(count($array_actualizar) > 0){
                                 DireccionesCliente::massUpdate(
                                     values: $array_actualizar,
@@ -162,7 +153,6 @@ class ExtraccionDireccionesClientes extends Command
             $mensaje_error = $e;
         }
 
-        //por ultimo, generamos log
         GenerateLogs::generateLogScheduleTask("EXTRACCION DIRECCIONES CLIENTES", "direcciones_clientes", $error, $cantidad_busqueda, $valores_creados, $valores_actualizados, $fecha_inicio_log, $mensaje_error);
     }
 }

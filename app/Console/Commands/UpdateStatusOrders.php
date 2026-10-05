@@ -34,7 +34,6 @@ class UpdateStatusOrders extends Command
         $error = 0;
         $mensaje_error = '';
 
-        //establecer variables
         $fecha_inicio_log = Date('Y-m-d\TH:i:s');
         $valores_actualizados = 0;
         $valores_creados = 0;
@@ -42,8 +41,8 @@ class UpdateStatusOrders extends Command
         
         try {
 
-            // $resultado_cantidad = Netsuite::get(2097, 'customsearch7007_2', 0, 1);
-            $resultado_cantidad = Netsuite::get(2097, 'customsearch7007_2', 0, 1, '', 'local');
+            // $resultado_cantidad = Netsuite::get(2097, 'customsearch7007_2', 0, 1, '', 'local');
+            $resultado_cantidad = Netsuite::get(2097, 'customsearch7007_2', 0, 1);
             $dataCantidad = json_decode($resultado_cantidad, true);
             $cantidad = $dataCantidad['count'] ?? 0;
 
@@ -62,8 +61,8 @@ class UpdateStatusOrders extends Command
                     $end = $end + 1000;
                     $start= str_pad($start, mb_strlen($end), "0", STR_PAD_LEFT);
 
-                    // $resultado = Netsuite::get(Netsuite::resolveId(2518,2527), null, $start, $end);
-                    $resultado = Netsuite::get(2518, null, $start, $end, '', 'local');
+                    // $resultado = Netsuite::get(2518, null, $start, $end, '', 'local');
+                    $resultado = Netsuite::get(2518, null, $start, $end);
                     $data = json_decode($resultado, true);
 
                     if(isset($data['error'])){
@@ -111,9 +110,7 @@ class UpdateStatusOrders extends Command
                                 $validar = OrdenesTraslado::where('numero_orden_traslado', $numero_documento)->first();
                                 if($validar)
                                 {
-                                    $validar->update([
-                                        'estado_netsuite' => $estado,
-                                    ]);
+                                    $validar->update(['estado_netsuite' => $estado]);
                                 }
                             }
                         }
