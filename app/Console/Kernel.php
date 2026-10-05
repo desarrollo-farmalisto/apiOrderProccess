@@ -26,7 +26,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('extraccion:catalogo')->cron('0 2,19 * * *');
         $schedule->command('extraccion:kits')->everyTwoHours();
         $schedule->command('extraccion:promociones')->hourly();
-        $schedule->command('extraccion:usuarios')->everyFourHours();
+        // $schedule->command('extraccion:usuarios')->everyFourHours();
         $schedule->command('extraccion:medicos')->daily();
         $schedule->command('extraccion:detalles-inventarios')->cron('0 2,19 * * *');
         $schedule->command('extraccion:catalogo-abbott')->daily();
