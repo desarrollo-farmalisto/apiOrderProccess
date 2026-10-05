@@ -18,34 +18,19 @@ class MediosPagoSeeder extends Seeder
         MediosPagos::insert([
             [
                 'netsuite_id' => 1,
-                'nombre' => "Datafono",
+                'nombre' => "DATAFONO",
                 'estado' => 1
             ],
             [
                 'netsuite_id' => 4,
-                'nombre' => "Efectivo",
-                'estado' => 1
-            ],
-            [
-                'netsuite_id' => 8,
-                'nombre' => "Mercado Libre",
-                'estado' => 1
-            ],
-            [
-                'netsuite_id' => 9,
-                'nombre' => "Bold",
+                'nombre' => "EFECTIVO",
                 'estado' => 1
             ],
             [
                 'netsuite_id' => 10,
-                'nombre' => "Ya Te Ayudo",
+                'nombre' => "TARJETA DE CREDITO",
                 'estado' => 1
-            ],
-            [
-                'netsuite_id' => 11,
-                'nombre' => "PSE",
-                'estado' => 1
-            ],
+            ]
         ]);
     }
 }
