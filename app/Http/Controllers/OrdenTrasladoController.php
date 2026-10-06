@@ -98,13 +98,11 @@ class OrdenTrasladoController extends Controller
             }
         }
 
-        // Vendedor 
         $socio = null;
-        if(auth()->user()){
+        if(auth()->user()) {
             $socio = auth()->user()->name;
         }
 
-        //crear json
         $array_json = array(
             "tipo_orden" => $traslado->tipo_orden,
             "desde_compania" => ($traslado->desde_compania == "ECOMERX/GALENICA") ? 8 : 6,
@@ -119,8 +117,8 @@ class OrdenTrasladoController extends Controller
         );
 
         $json = json_encode($array_json);
-        $resultado_service = Netsuite::post(2159, $json, 'local'); // sandbox
-        // $resultado_service = Netsuite::post(2159, $json);
+        // $resultado_service = Netsuite::post(2159, $json, 'local'); // sandbox
+        $resultado_service = Netsuite::post(2159, $json);
         $decodificado = json_decode($resultado_service, true);
 
         if (!is_array($decodificado) || !isset($decodificado["message"])) {
@@ -130,15 +128,13 @@ class OrdenTrasladoController extends Controller
         }
 
         if ($decodificado["message"] == 'success') {
-
             $id_netsuite = $decodificado["response"]["id"];
             $num_orden = null;
             $estado_ns = null;
             $items = null;
 
-            //consultar informacion del traslado
-            $resultado_consulta = Netsuite::get(2160, $id_netsuite, 0, 1, '', 'local');
-            // $resultado_consulta = Netsuite::get(2160, $id_netsuite, 0, 1);
+            // $resultado_consulta = Netsuite::get(2160, $id_netsuite, 0, 1, '', 'local');
+            $resultado_consulta = Netsuite::get(2160, $id_netsuite, 0, 1);
             $decodificado_consulta = json_decode($resultado_consulta, true);
             if (is_array($decodificado_consulta) && isset($decodificado_consulta["message"]) && $decodificado_consulta["message"] == 'success') {
                 $num_orden = $decodificado_consulta["response"]["num"];
@@ -146,7 +142,6 @@ class OrdenTrasladoController extends Controller
                 $items = $decodificado_consulta["response"]["items"];
             }
 
-            //validando los items
             if ($items != null) {
                 if (count($items) > 0) {
                     foreach ($items as $key => $value) {
@@ -165,7 +160,6 @@ class OrdenTrasladoController extends Controller
             );
             $orderUpdate = OrdenesTraslado::findOrFail($traslado->id)->update($actualizar);
 
-            //generar log
             $mensaje = 'CREACION ORDEN TRASLADO #' . $traslado->id . ', Mensaje: Orden de Traslado creada correctamente, generado con el ID NETSUITE #' . $id_netsuite . ' y NUMERO ORDEN #' . $num_orden;
             $agg_info = array('tipo' => 'ORDEN TRASLADO', 'respuesta_id' => $traslado->id, 'fecha' => date('Y-m-d'), 'error' => 'Si', 'mensaje' => $mensaje);
             LogsNetsuites::create($agg_info);
@@ -173,12 +167,9 @@ class OrdenTrasladoController extends Controller
             return $response;
         } else {
 
-            $actualizar = array(
-                'estado' => 3
-            );
+            $actualizar = array('estado' => 3);
             OrdenesTraslado::findOrFail($traslado->id)->update($actualizar);
 
-            //generar log
             $mensaje = 'ERROR CREACION ORDEN TRASLADO #' . $traslado->id . ', Mensaje: ' . $decodificado["response"];
             $agg_info = array(
                 'tipo' => 'ORDEN TRASLADO',
