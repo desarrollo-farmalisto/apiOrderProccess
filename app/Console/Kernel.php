@@ -18,11 +18,11 @@ class Kernel extends ConsoleKernel
         //$schedule->command('sanctum:prune-expired --hours=24')->daily();
 
         $schedule->command('extraccion:clientes')->cron('0 12,21 * * *');
-        $schedule->command('extraccion:direcciones-clientes')->cron('0 11:30,21:30 * * *');
+        $schedule->command('extraccion:direcciones-clientes')->cron('30 11,21 * * *');
         $schedule->command('extraccion:listas-precios')->cron('0 4 * * *');
         $schedule->command('extraccion:ubicaciones')->daily();
         $schedule->command('extraccion:inventario')->cron('0 1,18 * * *');
-        $schedule->command('extraccion:inventario-kits')->cron('0 1:30,18:30 * * *');
+        $schedule->command('extraccion:inventario-kits')->cron('30 1,18 * * *');
         $schedule->command('extraccion:catalogo')->cron('0 2,19 * * *');
         $schedule->command('extraccion:kits')->everyTwoHours();
         $schedule->command('extraccion:promociones')->hourly();
