@@ -17,23 +17,23 @@ class Kernel extends ConsoleKernel
     {
         //$schedule->command('sanctum:prune-expired --hours=24')->daily();
 
-        $schedule->command('extraccion:clientes')->cron('0 12,21 * * *');
-        $schedule->command('extraccion:direcciones-clientes')->cron('30 11,21 * * *');
-        $schedule->command('extraccion:listas-precios')->cron('0 4 * * *');
-        $schedule->command('extraccion:ubicaciones')->daily();
-        $schedule->command('extraccion:inventario')->cron('0 1,18 * * *');
-        $schedule->command('extraccion:inventario-kits')->cron('30 1,18 * * *');
-        $schedule->command('extraccion:catalogo')->cron('0 2,19 * * *');
-        $schedule->command('extraccion:kits')->everyTwoHours();
-        $schedule->command('extraccion:promociones')->hourly();
+        $schedule->command('extraccion:clientes')->cron('0 11,21 * * *')->withoutOverlapping(120);
+        $schedule->command('extraccion:direcciones-clientes')->cron('45 11,21 * * *')->withoutOverlapping(120);
+        $schedule->command('extraccion:listas-precios')->dailyAt('05:00')->withoutOverlapping(120);
+        $schedule->command('extraccion:ubicaciones')->dailyAt('00:10')->withoutOverlapping(60);
+        $schedule->command('extraccion:inventario')->cron('0 1,17 * * *')->withoutOverlapping(180);
+        $schedule->command('extraccion:inventario-kits')->cron('45 1,17 * * *')->withoutOverlapping(180);
+        $schedule->command('extraccion:catalogo')->cron('30 2,18 * * *')->withoutOverlapping(180);
+        $schedule->command('extraccion:kits')->cron('20 */2 * * *')->withoutOverlapping(90);
+        $schedule->command('extraccion:promociones')->cron('50 * * * *')->withoutOverlapping(45);
         // $schedule->command('extraccion:usuarios')->everyFourHours();
-        $schedule->command('extraccion:medicos')->daily();
-        $schedule->command('extraccion:detalles-inventarios')->cron('0 2,19 * * *');
-        $schedule->command('extraccion:catalogo-abbott')->daily();
-        $schedule->command('extraccion:inventarioAxa')->cron('0 3,20 * * *');
-        $schedule->command('Actualizacion_estado_ordenes')->cron('*/3 * * * *');
-        $schedule->command('app:envio-ordenes')->weeklyOn(1, '8:00');
-        $schedule->command('extraccion:clean-netsuite-logs')->monthlyOn(1, '06:00');
+        $schedule->command('extraccion:medicos')->dailyAt('00:25')->withoutOverlapping(60);
+        $schedule->command('extraccion:detalles-inventarios')->cron('15 3,19 * * *')->withoutOverlapping(180);
+        $schedule->command('extraccion:catalogo-abbott')->dailyAt('00:40')->withoutOverlapping(120);
+        $schedule->command('extraccion:inventarioAxa')->cron('0 4,20 * * *')->withoutOverlapping(180);
+        $schedule->command('Actualizacion_estado_ordenes')->everyThreeMinutes()->withoutOverlapping(10);
+        $schedule->command('app:envio-ordenes')->weeklyOn(1, '8:15')->withoutOverlapping(120);
+        $schedule->command('extraccion:clean-netsuite-logs')->monthlyOn(1, '06:15')->withoutOverlapping(120);
     }
 
     /**
