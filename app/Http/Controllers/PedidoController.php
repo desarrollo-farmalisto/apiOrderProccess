@@ -29,18 +29,7 @@ class PedidoController extends Controller
 
     public function getValoresEnvios()
     {
-        return response()->json(array(
-            "data" => [
-                array(
-                    'value' => 3500,
-                    'label' => 'Envio Galenica - $3.500'
-                ),
-                array(
-                    'value' => 5000,
-                    'label' => 'Envio Galenica - $5.000'
-                ),
-            ]
-        ));
+        return response()->json(array("data" => [array('value' => 5000, 'label' => 'Envio Galenica - $5.000')]));
     }
 
     public function getCatalogo($lista, $ubicacion)
